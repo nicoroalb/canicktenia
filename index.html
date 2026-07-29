@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<title>Canicktenia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="description" content="Cuaderno de entrenamiento de calistenia y fuerza." />
+<meta name="theme-color" content="#E9E9E4" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Canicktenia" />
+<meta name="format-detection" content="telephone=no" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="icon-180.png" />
+<link rel="icon" href="icon-192.png" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --tiza:#E9E9E4; --hierro:#16181B; --humo:#6E736D; --linea:#CDCEC7; --papel:#F5F5F1; --sangre:#C0392B;
+  --arriba:env(safe-area-inset-top,0px);
+  --abajo:env(safe-area-inset-bottom,0px);
+  --izq:env(safe-area-inset-left,0px);
+  --der:env(safe-area-inset-right,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--tiza);color:var(--hierro);min-height:100vh;
+  font-family:'IBM Plex Sans',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  font-size:16px;-webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+}
+button{font:inherit;cursor:pointer;border:none;background:none;color:inherit;text-align:left;}
+button:disabled{opacity:.3;cursor:default;}
+button:focus-visible,input:focus-visible,textarea:focus-visible,label:focus-within{outline:2px solid var(--hierro);outline-offset:2px;}
+input,textarea{width:100%;font:inherit;font-size:16px;background:var(--papel);border:1px solid var(--linea);
+  border-radius:0;padding:11px 12px;color:var(--hierro);-webkit-appearance:none;appearance:none;}
+input[type=date]{min-height:44px;}
+textarea{resize:vertical;}
+.rt-cargando{padding:64px 20px;color:var(--humo);font-size:14px;}
+
+.rt-cab{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;
+  padding:calc(20px + var(--arriba)) calc(20px + var(--der)) 16px calc(20px + var(--izq));}
+.rt-cab-sec{align-items:center;}
+.rt-eyebrow{margin:0 0 2px;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--humo);}
+.rt-titulo{margin:0;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:34px;line-height:.9;letter-spacing:.02em;}
+.rt-titulo-sm{font-size:20px;letter-spacing:.06em;}
+.rt-marcador{text-align:right;line-height:1;flex-shrink:0;}
+.rt-marcador-num{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:20px;font-weight:600;}
+.rt-marcador-uni{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--humo);}
+.rt-volver{font-size:14px;font-weight:500;padding:8px 0;}
+
+.rt-nav{display:flex;gap:14px;border-bottom:2px solid var(--hierro);
+  padding:0 calc(20px + var(--der)) 10px calc(20px + var(--izq));
+  font-size:11px;letter-spacing:.1em;text-transform:uppercase;}
+.rt-nav .es-activo{border-bottom:2px solid var(--hierro);padding-bottom:6px;}
+.rt-nav button{color:var(--humo);padding-bottom:6px;}
+
+.rt-banda{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--linea);}
+.rt-banda-dato{padding:11px calc(14px + var(--der)) 12px calc(20px + var(--izq));
+  border-right:1px solid var(--linea);line-height:1.1;}
+.rt-banda-dato:last-child{border-right:none;}
+.rt-banda-num{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:18px;font-weight:600;}
+.rt-banda-uni{display:block;margin-top:3px;font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
+.rt-banda-suelta{border-top:1px solid var(--linea);margin-bottom:18px;}
+.rt-banda-suelta .rt-banda-dato{padding-left:0;}
+.rt-banda-suelta .rt-banda-dato+.rt-banda-dato{padding-left:14px;}
+
+.rt-main{padding:16px calc(20px + var(--der)) calc(120px + var(--abajo)) calc(20px + var(--izq));}
+.rt-vacio{padding:48px 0;border-bottom:1px solid var(--linea);}
+.rt-vacio-t{margin:0 0 6px;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:20px;}
+.rt-vacio-d{margin:0;max-width:34ch;color:var(--humo);font-size:14px;line-height:1.5;}
+
+.rt-lista{list-style:none;margin:0;padding:0;}
+.rt-tarjeta{display:grid;grid-template-columns:52px 1fr auto;gap:14px;align-items:center;width:100%;
+  padding:14px 0;border-bottom:1px solid var(--linea);}
+.rt-tarjeta:active{background:var(--papel);}
+.rt-fecha{line-height:1;text-align:center;}
+.rt-fecha-dia{display:block;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:28px;}
+.rt-fecha-mes{display:block;font-size:10px;letter-spacing:.12em;color:var(--humo);}
+.rt-fecha-anio{display:block;font-size:9px;letter-spacing:.1em;color:var(--humo);margin-top:2px;}
+.rt-tarjeta-cuerpo{display:block;min-width:0;}
+.rt-chip{display:inline-block;font-size:10px;letter-spacing:.1em;text-transform:uppercase;
+  border:1px solid var(--hierro);padding:2px 7px;}
+.rt-resumen{display:block;margin-top:7px;font-size:13px;color:var(--humo);}
+.rt-vol{text-align:right;line-height:1.1;}
+.rt-vol-num{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:17px;font-weight:600;}
+.rt-vol-uni{font-size:10px;color:var(--humo);}
+
+.rt-pie{position:sticky;bottom:0;
+  padding:14px calc(20px + var(--der)) calc(20px + var(--abajo)) calc(20px + var(--izq));
+  background:linear-gradient(to top,var(--tiza) 65%,rgba(233,233,228,0));}
+.rt-primario{width:100%;text-align:center;background:var(--hierro);color:var(--tiza);padding:17px;
+  font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:17px;letter-spacing:.06em;text-transform:uppercase;}
+.rt-primario:active{transform:translateY(1px);}
+
+.rt-capa{position:fixed;inset:0;background:rgba(22,24,27,.55);display:flex;align-items:flex-end;z-index:20;}
+.rt-hoja{width:100%;max-height:88vh;overflow:auto;background:var(--tiza);border-top:3px solid var(--hierro);
+  padding:20px calc(20px + var(--der)) calc(20px + var(--abajo)) calc(20px + var(--izq));
+  -webkit-overflow-scrolling:touch;}
+.rt-hoja-t{margin:0 0 14px;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:22px;}
+.rt-hoja-sec{margin:16px 0 4px;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--humo);}
+.rt-hoja-sec:first-of-type{margin-top:0;}
+.rt-opcion{display:block;width:100%;padding:13px 0;border-bottom:1px solid var(--linea);}
+.rt-opcion-n{display:block;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:17px;letter-spacing:.03em;}
+.rt-opcion-d{display:block;margin-top:3px;font-size:12px;color:var(--humo);line-height:1.4;}
+.rt-cerrar{display:block;width:100%;text-align:center;padding:16px 0 4px;font-size:14px;color:var(--humo);}
+
+.rt-campos{display:flex;gap:12px;}
+.rt-campos .rt-campo{flex:1;}
+.rt-campo{display:block;margin-bottom:16px;}
+.rt-label{display:block;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--humo);margin-bottom:5px;}
+
+.rt-ej{border-top:2px solid var(--hierro);padding:12px 0 16px;}
+.rt-ej-cab{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
+.rt-ej-t{margin:0;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:17px;letter-spacing:.04em;}
+.rt-ej-acciones{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.rt-orden{font-size:14px;line-height:1;color:var(--humo);border:1px solid var(--linea);
+  width:30px;height:30px;text-align:center;background:var(--papel);flex-shrink:0;}
+.rt-mini{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--humo);flex-shrink:0;padding:4px 0;}
+.rt-borrar{color:var(--sangre);}
+.rt-prev{margin:4px 0 10px;font-size:11px;color:var(--humo);line-height:1.5;}
+.rt-prev span{text-transform:uppercase;letter-spacing:.08em;font-size:9px;}
+.rt-prev-nota{margin-top:-7px;padding-left:8px;border-left:2px solid var(--linea);}
+.rt-nota{margin:6px 0 12px;font-size:13px;line-height:1.5;color:var(--humo);max-width:44ch;}
+
+.rt-serie{margin-bottom:8px;}
+.rt-serie-fila{display:flex;align-items:center;gap:6px;}
+.rt-serie-n{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--humo);width:12px;flex-shrink:0;}
+.rt-disco{width:5px;height:36px;flex-shrink:0;background:#C6C7C0;}
+.rt-medida{display:flex;align-items:center;flex:1;min-width:0;background:var(--papel);border:1px solid var(--linea);}
+.rt-medida:focus-within{outline:2px solid var(--hierro);outline-offset:1px;}
+.rt-medida input{flex:1;min-width:0;border:none;background:transparent;text-align:right;
+  padding:12px 3px 12px 6px;font-family:'IBM Plex Mono',ui-monospace,monospace;}
+.rt-medida input:focus-visible{outline:none;}
+.rt-uni{flex-shrink:0;padding-right:7px;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--humo);}
+.rt-prog{margin-top:5px;margin-left:23px;width:calc(100% - 52px);font-size:16px;padding:10px 11px;}
+.rt-ej-notas{margin-top:10px;}
+.rt-ej-notas textarea{min-height:46px;padding:11px;line-height:1.45;overflow:hidden;}
+.rt-x{font-size:22px;line-height:1;color:var(--humo);padding:6px 4px;flex-shrink:0;}
+.rt-pr{flex-shrink:0;background:var(--sangre);color:var(--tiza);font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:9px;font-weight:600;letter-spacing:.1em;padding:3px 5px;}
+.es-oculto{display:none;}
+
+.rt-ej-pie{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.rt-ej-pie button{font-size:11px;color:var(--humo);border:1px solid var(--linea);padding:8px 11px;background:var(--papel);}
+.rt-ej-pie button:first-child{color:var(--hierro);border-color:var(--hierro);font-weight:500;}
+
+.rt-anadir{display:block;width:100%;text-align:center;margin:10px 0 22px;padding:15px;
+  border:1px dashed var(--hierro);font-size:12px;letter-spacing:.06em;text-transform:uppercase;}
+.rt-notas{margin-top:10px;}
+
+.rt-acciones{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px;}
+.rt-boton{border:1px solid var(--hierro);background:var(--papel);padding:12px 14px;font-size:12px;
+  letter-spacing:.06em;text-transform:uppercase;}
+.rt-boton:active{background:var(--tiza);}
+.rt-archivo{position:relative;overflow:hidden;cursor:pointer;display:inline-block;}
+.rt-archivo input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer;padding:0;}
+.rt-aviso{margin:18px 0 0;border-left:3px solid var(--hierro);padding:8px 0 8px 11px;font-size:13px;line-height:1.5;}
+.rt-aviso-error{border-color:var(--sangre);}
+
+.rt-nuevo{border:1px solid var(--hierro);padding:14px;margin:10px 0 22px;background:var(--papel);}
+.rt-toggles{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+.rt-toggles button{font-size:12px;padding:9px 12px;border:1px solid var(--linea);background:var(--tiza);}
+.rt-toggles button.es-activo{background:var(--hierro);color:var(--tiza);border-color:var(--hierro);}
+.rt-toggles-sm button{font-size:11px;padding:7px 9px;}
+.rt-toggles .rt-orden{width:30px;height:30px;padding:0;}
+.rt-sets-num{display:flex;align-items:center;gap:10px;margin-top:12px;}
+.rt-sets-num .rt-label{margin:0;}
+.rt-sets-num button{border:1px solid var(--linea);width:34px;height:34px;text-align:center;background:var(--tiza);}
+.rt-sets-num strong{font-family:'IBM Plex Mono',ui-monospace,monospace;min-width:14px;text-align:center;}
+.rt-sets-inline{margin-top:0;gap:6px;flex-shrink:0;}
+.rt-nuevo-pie{display:flex;justify-content:flex-end;gap:18px;margin-top:14px;font-size:14px;}
+.rt-ok{font-weight:600;}
+
+.rt-plantilla{border-top:2px solid var(--hierro);padding:12px 0 14px;}
+.rt-plantilla-t{flex:1;font-family:'Anton','Arial Narrow',Impact,sans-serif;font-size:17px;letter-spacing:.04em;min-width:0;}
+.rt-plantilla-c{display:block;margin-top:3px;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:11px;
+  font-weight:400;letter-spacing:0;color:var(--humo);}
+.rt-plantilla-cuerpo{margin-top:14px;}
+.rt-def{border-top:1px solid var(--linea);padding:11px 0;}
+.rt-def-fila{display:flex;align-items:center;gap:8px;}
+.rt-def-nombre{font-size:16px;padding:10px 11px;}
+
+.rt-record{text-align:right;line-height:1.1;flex-shrink:0;}
+.rt-record-num{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:18px;font-weight:600;}
+.rt-record-uni{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
+.rt-record.es-fresco .rt-record-num{color:var(--sangre);}
+.rt-barras{display:flex;align-items:flex-end;gap:3px;height:54px;margin-top:14px;}
+.rt-barra{flex:1;min-width:3px;background:var(--hierro);opacity:.75;}
+.rt-barra.es-max{background:var(--sangre);opacity:1;}
+.rt-barras-pie{display:flex;justify-content:space-between;margin:5px 0 0;font-size:9px;
+  letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
+.rt-hist{list-style:none;margin:10px 0 0;padding:0;}
+.rt-hist li{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px solid var(--linea);font-size:13px;}
+.rt-hist-f{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--humo);width:52px;flex-shrink:0;}
+.rt-hist-t{flex:1;min-width:0;}
+.rt-hist-s{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--humo);flex-shrink:0;}
+
+.rt-borrar-sesion{display:block;margin-top:20px;font-size:13px;color:var(--sangre);text-decoration:underline;padding:4px 0;}
+.rt-confirmar{margin-top:20px;border:1px solid var(--sangre);padding:14px;font-size:13px;line-height:1.5;}
+.rt-confirmar p{margin:0 0 10px;}
+.rt-confirmar-pie{display:flex;gap:20px;}
+
+@media (max-width:360px){
+  .rt-nav{gap:10px;font-size:10px;letter-spacing:.05em;}
+  .rt-titulo{font-size:29px;}
+  .rt-serie-fila{gap:5px;}
+  .rt-medida input{padding-left:4px;padding-right:2px;}
+  .rt-uni{font-size:9px;padding-right:5px;}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+<div id="app"><p class="rt-cargando">Abriendo el cuaderno…</p></div>
+<datalist id="rt-nombres"></datalist>
+<datalist id="rt-prog"></datalist>
+
+<script>
+"use strict";
+
+/* ============================== Almacenamiento ============================= */
+
+const K_SESIONES = "canicktenia:sesiones:v1";
+const K_PLANTILLAS = "canicktenia:plantillas:v1";
+const K_VERSION = "canicktenia:version";
+const VERSION_DATOS = 2;
+const memoria = {};
+
+/* Ejercicios que han cambiado de nombre: clave en minúsculas -> nombre nuevo.
+   Se aplica una sola vez a plantillas y sesiones, así el historial y los
+   récords siguen contando bajo el nombre nuevo. */
+const RENOMBRES = {
+  "rings tucked row": "Front lever rows (rings)",
+  "pseudoplanche lean": "Pseudo planche lean",
+  "pseudo planche pushup": "Pseudo planche push-up",
+  "rings pushup": "Ring push-up",
+  "hs + pike pushup": "Handstand push-up",
+  "planche pushup": "Planche push-up",
+  "handstand pushup": "Handstand push-up",
+  "lying lateral raise": "Lateral raises",
+};
+
+const almacen = {
+  leer(k) {
+    try {
+      const v = localStorage.getItem(k);
+      return v ? JSON.parse(v) : null;
+    } catch (e) {
+      return k in memoria ? memoria[k] : null;
+    }
+  },
+  escribir(k, v) {
+    memoria[k] = v;
+    try {
+      localStorage.setItem(k, JSON.stringify(v));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  },
+};
+
+/* ================================ Utilidades ============================== */
+
+const uid = () => Math.random().toString(36).slice(2, 10);
+const p2 = (n) => String(n).padStart(2, "0");
+const isoDe = (d) => d.getFullYear() + "-" + p2(d.getMonth() + 1) + "-" + p2(d.getDate());
+const hoy = () => isoDe(new Date());
+
+const MESES = ["ENE","FEB","MAR","ABR","MAY","JUN","JUL","AGO","SEP","OCT","NOV","DIC"];
+const partesFecha = (iso) => {
+  const t = (iso || "").split("-");
+  return { dia: t[2] || "--", mes: MESES[Number(t[1]) - 1] || "", anio: t[0] || "" };
+};
+const fechaCorta = (iso) => {
+  const f = partesFecha(iso);
+  return f.dia + " " + f.mes;
+};
+const numero = (n) => Math.round(n).toLocaleString("es-ES");
+
+const diasDesde = (iso) => {
+  if (!iso) return Infinity;
+  const a = new Date(iso + "T00:00:00");
+  const b = new Date(hoy() + "T00:00:00");
+  return Math.round((b - a) / 86400000);
+};
+
+const lunesDe = (iso) => {
+  const d = new Date(iso + "T00:00:00");
+  if (isNaN(d)) return "";
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return isoDe(d);
+};
+
+const clave = (n) => (n || "").trim().toLowerCase();
+
+const PROGRESIONES = ["Tuck","Adv. tuck","Straddle","Half lay","Full","Banda","Pies apoyados"];
+
+/* ============================= Plantillas base ============================ */
+
+const def = (nombre, sets, opts) => {
+  opts = opts || {};
+  return {
+    id: uid(),
+    nombre: nombre,
+    medida: opts.medida || "reps",
+    peso: !!opts.peso,
+    cm: !!opts.cm,
+    progresion: !!opts.progresion,
+    sets: sets,
+  };
+};
+
+const PLANTILLAS_BASE = () => [
+  { id: uid(), nombre: "Upper 1", tipo: "Fuerza", ejercicios: [
+    def("Planche", 3, { medida: "seg", progresion: true }),
+    def("Pull-up", 3, { peso: true }),
+    def("Pseudo planche lean", 3, { medida: "seg", cm: true }),
+    def("Front lever rows (rings)", 3, { peso: true }),
+  ]},
+  { id: uid(), nombre: "Upper 2", tipo: "Fuerza", ejercicios: [
+    def("Pseudo planche push-up", 3, { cm: true }),
+    def("Chin-up", 3, { peso: true }),
+    def("Ring push-up", 3, { peso: true }),
+    def("Row", 3, { peso: true }),
+    def("Handstand push-up", 3),
+  ]},
+  { id: uid(), nombre: "Upper 3", tipo: "Fuerza", ejercicios: [
+    def("Planche push-up", 3, { progresion: true }),
+    def("Chin-up", 3, { peso: true }),
+    def("Handstand push-up", 3),
+  ]},
+  { id: uid(), nombre: "Arm (isolation)", tipo: "Fuerza", ejercicios: [
+    def("Preacher curl", 3, { peso: true }),
+    def("Tricep overhead extension", 3, { peso: true }),
+    def("Lateral raises", 3, { peso: true }),
+  ]},
+  { id: uid(), nombre: "Legs", tipo: "Fuerza", ejercicios: [
+    def("Back squat", 2, { peso: true }),
+    def("Romanian deadlift", 2, { peso: true }),
+    def("Reverse nordic curl", 2, { peso: true }),
+    def("Nordic curl", 2, { peso: true }),
+  ]},
+];
+
+/* ================================ Cálculos ================================ */
+
+const nuevaSerie = () => ({ id: uid(), valor: "", peso: "", cm: "", progresion: "" });
+
+const desdePlantilla = (p) => ({
+  id: uid(),
+  fecha: hoy(),
+  tipo: p ? p.nombre : "Sesión libre",
+  notas: "",
+  ejercicios: (p ? p.ejercicios : []).map((e) => ({
+    id: uid(),
+    nombre: e.nombre,
+    medida: e.medida,
+    peso: e.peso,
+    cm: e.cm,
+    progresion: e.progresion,
+    notas: "",
+    series: Array.from({ length: Math.max(1, e.sets) }, nuevaSerie),
+  })),
+});
+
+const desdeSesion = (prev) => ({
+  id: uid(),
+  fecha: hoy(),
+  tipo: prev.tipo,
+  notas: "",
+  ejercicios: (prev.ejercicios || []).map((e) => ({
+    id: uid(),
+    nombre: e.nombre,
+    medida: e.medida,
+    peso: e.peso,
+    cm: e.cm,
+    progresion: e.progresion,
+    notas: "",
+    series: (e.series && e.series.length ? e.series : [nuevaSerie()]).map((r) => ({
+      id: uid(),
+      valor: "",
+      peso: r.peso || "",
+      cm: r.cm || "",
+      progresion: r.progresion || "",
+    })),
+  })),
+});
+
+const kgSesion = (s) => (s.ejercicios || []).reduce((t, e) =>
+  t + (e.medida === "reps" && e.peso
+    ? e.series.reduce((x, r) => x + (Number(r.peso) || 0) * (Number(r.valor) || 0), 0)
+    : 0), 0);
+
+const segSesion = (s) => (s.ejercicios || []).reduce((t, e) =>
+  t + (e.medida === "seg" ? e.series.reduce((x, r) => x + (Number(r.valor) || 0), 0) : 0), 0);
+
+const repsSesion = (s) => (s.ejercicios || []).reduce((t, e) =>
+  t + (e.medida === "reps" ? e.series.reduce((x, r) => x + (Number(r.valor) || 0), 0) : 0), 0);
+
+const sesionVacia = (s) =>
+  !(s.notas || "").trim() &&
+  (s.ejercicios || []).every((e) =>
+    !(e.notas || "").trim() && (e.series || []).every((r) => !String(r.valor || "").trim()));
+
+const resumenSerie = (e, r) => {
+  const p = [];
+  if (r.valor) p.push(e.medida === "seg" ? r.valor + " s" : r.valor + " reps");
+  if (e.peso && r.peso) p.push(r.peso + " kg");
+  if (e.cm && r.cm) p.push(r.cm + " cm");
+  if (e.progresion && r.progresion) p.push(r.progresion);
+  return p.join(" · ");
+};
+
+const marcaSerie = (e, r) => {
+  const valor = Number(r.valor) || 0;
+  if (!valor) return null;
+  if (e.medida === "seg") return { p: valor, s: Number(r.peso) || 0 };
+  if (e.peso) return { p: Number(r.peso) || 0, s: valor };
+  return { p: valor, s: 0 };
+};
+const comparar = (a, b) => a.p - b.p || a.s - b.s;
+const unidadEj = (e) => (e.medida === "seg" ? "s" : e.peso ? "kg" : "reps");
+
+const colorEj = (ej, r) => {
+  if (ej.medida === "seg") {
+    const s = Number(r.valor) || 0;
+    if (s >= 20) return "#C0392B";
+    if (s >= 10) return "#2B5FC8";
+    if (s >= 5) return "#D9A521";
+    if (s > 0) return "#2F8F5B";
+    return "#C6C7C0";
+  }
+  const kg = Number(r.peso) || 0;
+  if (kg >= 80) return "#C0392B";
+  if (kg >= 40) return "#2B5FC8";
+  if (kg >= 20) return "#D9A521";
+  if (Number(r.valor) > 0) return "#2F8F5B";
+  return "#C6C7C0";
+};
+
+const ultimaVez = (sesiones, nombre, idActual) => {
+  const k = clave(nombre);
+  if (!k) return null;
+  const previas = sesiones.filter((s) => s.id !== idActual)
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  for (const s of previas) {
+    const e = (s.ejercicios || []).find((x) => clave(x.nombre) === k);
+    if (e) {
+      const hechas = e.series.filter((r) => r.valor).map((r) => resumenSerie(e, r));
+      if (hechas.length)
+        return { fecha: s.fecha, texto: hechas.join("  /  "), nota: (e.notas || "").trim() };
+    }
+  }
+  return null;
+};
+
+const marcasAntesDe = (sesiones, sesion) => {
+  const mapa = new Map();
+  sesiones.filter((s) => s.id !== sesion.id && s.fecha <= sesion.fecha).forEach((s) =>
+    (s.ejercicios || []).forEach((e) => {
+      const k = clave(e.nombre);
+      if (!k) return;
+      (e.series || []).forEach((r) => {
+        const m = marcaSerie(e, r);
+        if (!m) return;
+        const act = mapa.get(k);
+        if (!act || comparar(m, act) > 0) mapa.set(k, m);
+      });
+    })
+  );
+  return mapa;
+};
+
+const recordsDeSesion = (sesion, sesiones) => {
+  const previas = marcasAntesDe(sesiones, sesion);
+  const res = {};
+  (sesion.ejercicios || []).forEach((e, i) => {
+    const base = previas.get(clave(e.nombre));
+    if (!base) return;
+    let mejorJ = -1, mejorM = null;
+    (e.series || []).forEach((r, j) => {
+      const m = marcaSerie(e, r);
+      if (!m || comparar(m, base) <= 0) return;
+      if (!mejorM || comparar(m, mejorM) > 0) { mejorM = m; mejorJ = j; }
+    });
+    if (mejorJ >= 0) res[i] = mejorJ;
+  });
+  return res;
+};
+
+const mover = (lista, i, dir) => {
+  const j = i + dir;
+  if (j < 0 || j >= lista.length) return lista;
+  const c = lista.slice();
+  const t = c[i]; c[i] = c[j]; c[j] = t;
+  return c;
+};
+
+/* ============================ Importar / sanear =========================== */
+
+const sanearSesion = (s) => ({
+  id: typeof s.id === "string" ? s.id : uid(),
+  fecha: /^\d{4}-\d{2}-\d{2}$/.test(s.fecha) ? s.fecha : hoy(),
+  tipo: String(s.tipo || "Sesión"),
+  notas: String(s.notas || ""),
+  ejercicios: (Array.isArray(s.ejercicios) ? s.ejercicios : []).map((e) => ({
+    id: typeof e.id === "string" ? e.id : uid(),
+    nombre: String(e.nombre || "Ejercicio"),
+    medida: e.medida === "seg" ? "seg" : "reps",
+    peso: !!e.peso,
+    cm: !!e.cm,
+    progresion: !!e.progresion,
+    notas: String(e.notas || ""),
+    series: (Array.isArray(e.series) ? e.series : []).map((r) => ({
+      id: typeof r.id === "string" ? r.id : uid(),
+      valor: r.valor == null ? "" : String(r.valor),
+      peso: r.peso == null ? "" : String(r.peso),
+      cm: r.cm == null ? "" : String(r.cm),
+      progresion: r.progresion == null ? "" : String(r.progresion),
+    })),
+  })),
+});
+
+const sanearPlantilla = (p) => ({
+  id: typeof p.id === "string" ? p.id : uid(),
+  nombre: String(p.nombre || "Rutina"),
+  tipo: String(p.tipo || "Fuerza"),
+  ejercicios: (Array.isArray(p.ejercicios) ? p.ejercicios : []).map((e) => ({
+    id: typeof e.id === "string" ? e.id : uid(),
+    nombre: String(e.nombre || "Ejercicio"),
+    medida: e.medida === "seg" ? "seg" : "reps",
+    peso: !!e.peso,
+    cm: !!e.cm,
+    progresion: !!e.progresion,
+    sets: Math.max(1, Number(e.sets) || 1),
+  })),
+});
+
+/* ============================== Mini-DOM (h) ============================== */
+
+function h(tag, props) {
+  const el = document.createElement(tag);
+  props = props || {};
+  for (const k in props) {
+    const v = props[k];
+    if (v == null || v === false) continue;
+    if (k === "class") el.className = v;
+    else if (k === "text") el.textContent = v;
+    else if (k === "value") el.value = v;
+    else if (k === "disabled") el.disabled = !!v;
+    else if (k === "style") { for (const s in v) el.style[s] = v[s]; }
+    else if (k === "dataset") { for (const d in v) el.dataset[d] = v[d]; }
+    else if (k.slice(0, 2) === "on") el.addEventListener(k.slice(2).toLowerCase(), v);
+    else el.setAttribute(k, v);
+  }
+  for (let i = 2; i < arguments.length; i++) anexar(el, arguments[i]);
+  return el;
+}
+function anexar(el, hijo) {
+  if (hijo == null || hijo === false) return;
+  if (Array.isArray(hijo)) { hijo.forEach((c) => anexar(el, c)); return; }
+  el.appendChild(hijo.nodeType ? hijo : document.createTextNode(String(hijo)));
+}
+
+/* ================================= Estado ================================= */
+
+const estado = {
+  sesiones: [],
+  plantillas: [],
+  vista: { pantalla: "historial", id: null },
+  eligiendo: false,
+  recienCreadas: [],
+  abiertaPlantilla: null,
+  abiertoProgreso: null,
+  anadiendo: null,          /* "sesion" | id de plantilla | null */
+  confirmarBorrado: false,
+  confirmarReset: false,
+  aviso: null,
+  pendiente: null,
+  textoCopia: "",
+};
+
+let guardadoPendiente = null;
+function guardar(inmediato) {
+  clearTimeout(guardadoPendiente);
+  const escribir = () => {
+    const ok1 = almacen.escribir(K_SESIONES, estado.sesiones);
+    const ok2 = almacen.escribir(K_PLANTILLAS, estado.plantillas);
+    if (!ok1 || !ok2) avisoGuardado();
+  };
+  if (inmediato) escribir();
+  else guardadoPendiente = setTimeout(escribir, 400);
+}
+let yaAvisado = false;
+function avisoGuardado() {
+  if (yaAvisado) return;
+  yaAvisado = true;
+  alert("No he podido guardar en este navegador. Si estás en una ventana privada, ábrela en una normal para que no se pierda nada.");
+}
+
+const sesionActual = () => estado.sesiones.find((s) => s.id === estado.vista.id);
+
+function irA(pantalla) {
+  estado.vista = { pantalla: pantalla, id: null };
+  estado.anadiendo = null;
+  estado.confirmarBorrado = false;
+  estado.confirmarReset = false;
+  estado.aviso = null;
+  estado.pendiente = null;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function abrirSesion(id) {
+  estado.vista = { pantalla: "sesion", id: id };
+  estado.anadiendo = null;
+  estado.confirmarBorrado = false;
+  render();
+  window.scrollTo(0, 0);
+}
+
+function empezar(p) {
+  const s = desdePlantilla(p);
+  estado.sesiones.unshift(s);
+  estado.recienCreadas.push(s.id);
+  estado.eligiendo = false;
+  guardar(true);
+  abrirSesion(s.id);
+}
+
+function repetir(prev) {
+  const s = desdeSesion(prev);
+  estado.sesiones.unshift(s);
+  estado.recienCreadas.push(s.id);
+  estado.eligiendo = false;
+  guardar(true);
+  abrirSesion(s.id);
+}
+
+function salirDeSesion() {
+  const s = sesionActual();
+  if (s && estado.recienCreadas.indexOf(s.id) >= 0 && sesionVacia(s)) {
+    estado.sesiones = estado.sesiones.filter((x) => x.id !== s.id);
+    estado.recienCreadas = estado.recienCreadas.filter((id) => id !== s.id);
+    guardar(true);
+  }
+  irA("historial");
+}
+
+/* =============================== Render raíz ============================== */
+
+const raiz = document.getElementById("app");
+
+function render() {
+  guardar();
+  actualizarDatalists();
+  raiz.textContent = "";
+
+  const v = estado.vista;
+  if (v.pantalla === "sesion" && sesionActual()) anexar(raiz, pantallaSesion(sesionActual()));
+  else if (v.pantalla === "plantillas") anexar(raiz, pantallaPlantillas());
+  else if (v.pantalla === "progreso") anexar(raiz, pantallaProgreso());
+  else if (v.pantalla === "datos") anexar(raiz, pantallaDatos());
+  else anexar(raiz, pantallaHistorial());
+
+  if (estado.eligiendo) anexar(raiz, hojaSelector());
+}
+
+function actualizarDatalists() {
+  const set = new Set();
+  estado.plantillas.forEach((p) => p.ejercicios.forEach((e) => e.nombre && set.add(e.nombre)));
+  estado.sesiones.forEach((s) => (s.ejercicios || []).forEach((e) => e.nombre && set.add(e.nombre)));
+  const dl = document.getElementById("rt-nombres");
+  dl.textContent = "";
+  [...set].sort().forEach((n) => anexar(dl, h("option", { value: n })));
+  const dp = document.getElementById("rt-prog");
+  if (!dp.children.length) PROGRESIONES.forEach((n) => anexar(dp, h("option", { value: n })));
+}
+
+function nav(activa) {
+  const items = [["historial","Historial"],["progreso","Progreso"],["plantillas","Plantillas"],["datos","Datos"]];
+  return h("nav", { class: "rt-nav" }, items.map(([id, t]) =>
+    id === activa ? h("span", { class: "es-activo", text: t })
+                  : h("button", { onclick: () => irA(id), text: t })));
+}
+
+/* ============================== 1. Historial ============================== */
+
+function pantallaHistorial() {
+  const ordenadas = estado.sesiones.slice().sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  const kgTotal = ordenadas.reduce((t, s) => t + kgSesion(s), 0);
+
+  const sesiones7 = ordenadas.filter((s) => diasDesde(s.fecha) <= 7).length;
+  const kg30 = ordenadas.filter((s) => diasDesde(s.fecha) <= 30).reduce((t, s) => t + kgSesion(s), 0);
+  const semanas = new Set(ordenadas.map((s) => lunesDe(s.fecha)).filter(Boolean));
+  let racha = 0;
+  const cursor = new Date(lunesDe(hoy()) + "T00:00:00");
+  while (semanas.has(isoDe(cursor))) { racha++; cursor.setDate(cursor.getDate() - 7); }
+
+  const cabecera = h("header", { class: "rt-cab" },
+    h("div", null,
+      h("p", { class: "rt-eyebrow", text: "Cuaderno de entrenamiento" }),
+      h("h1", { class: "rt-titulo", text: "CANICKTENIA" })
+    ),
+    h("div", { class: "rt-marcador" },
+      h("span", { class: "rt-marcador-num", text: numero(kgTotal) }),
+      h("span", { class: "rt-marcador-uni", text: "kg acumulados" })
+    )
+  );
+
+  const banda = h("div", { class: "rt-banda" },
+    dato(sesiones7, "sesiones · 7 días"),
+    dato(numero(kg30), "kg · 30 días"),
+    dato(racha, racha === 1 ? "semana seguida" : "semanas seguidas")
+  );
+
+  const cuerpo = ordenadas.length === 0
+    ? h("div", { class: "rt-vacio" },
+        h("p", { class: "rt-vacio-t", text: "Sin sesiones todavía." }),
+        h("p", { class: "rt-vacio-d", text: "Empieza una desde tus rutinas: Upper 1, Upper 2, Upper 3, Arm o Legs. También puedes recuperar una copia en la pestaña Datos." })
+      )
+    : h("ul", { class: "rt-lista" }, ordenadas.map((s) => {
+        const f = partesFecha(s.fecha);
+        const seg = segSesion(s);
+        return h("li", null,
+          h("button", { class: "rt-tarjeta", onclick: () => abrirSesion(s.id) },
+            h("span", { class: "rt-fecha" },
+              h("span", { class: "rt-fecha-dia", text: f.dia }),
+              h("span", { class: "rt-fecha-mes", text: f.mes }),
+              h("span", { class: "rt-fecha-anio", text: f.anio })
+            ),
+            h("span", { class: "rt-tarjeta-cuerpo" },
+              h("span", { class: "rt-chip", text: s.tipo }),
+              h("span", { class: "rt-resumen",
+                text: (s.ejercicios || []).length + " ejercicios · " + repsSesion(s) + " reps" + (seg > 0 ? " · " + seg + " s" : "") })
+            ),
+            h("span", { class: "rt-vol" },
+              h("span", { class: "rt-vol-num", text: numero(kgSesion(s)) }),
+              h("span", { class: "rt-vol-uni", text: "kg" })
+            )
+          )
+        );
+      }));
+
+  return [
+    cabecera,
+    nav("historial"),
+    banda,
+    h("main", { class: "rt-main" }, cuerpo),
+    h("div", { class: "rt-pie" },
+      h("button", { class: "rt-primario", text: "Empezar sesión",
+        onclick: () => { estado.eligiendo = true; render(); } })
+    ),
+  ];
+}
+
+function dato(num, uni) {
+  return h("div", { class: "rt-banda-dato" },
+    h("span", { class: "rt-banda-num", text: num }),
+    h("span", { class: "rt-banda-uni", text: uni })
+  );
+}
+
+/* =============================== 2. Selector ============================== */
+
+function hojaSelector() {
+  const conDatos = estado.sesiones.slice()
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1))
+    .filter((s) => !sesionVacia(s));
+  const recientes = [];
+  const vistas = new Set();
+  for (const s of conDatos) {
+    const k = clave(s.tipo);
+    if (vistas.has(k)) continue;
+    vistas.add(k);
+    recientes.push(s);
+    if (recientes.length === 2) break;
+  }
+
+  const cerrar = () => { estado.eligiendo = false; render(); };
+
+  const hoja = h("div", { class: "rt-hoja", onclick: (e) => e.stopPropagation() },
+    h("h2", { class: "rt-hoja-t", text: "¿Qué toca hoy?" }),
+    recientes.length ? h("p", { class: "rt-hoja-sec", text: "Repetir con los mismos kg" }) : null,
+    recientes.map((s) => h("button", { class: "rt-opcion", onclick: () => repetir(s) },
+      h("span", { class: "rt-opcion-n", text: s.tipo }),
+      h("span", { class: "rt-opcion-d", text: "Última vez el " + fechaCorta(s.fecha) + " · kg, cm y progresión ya puestos" })
+    )),
+    recientes.length ? h("p", { class: "rt-hoja-sec", text: "Empezar en limpio" }) : null,
+    estado.plantillas.map((p) => h("button", { class: "rt-opcion", onclick: () => empezar(p) },
+      h("span", { class: "rt-opcion-n", text: p.nombre }),
+      h("span", { class: "rt-opcion-d", text: p.ejercicios.map((e) => e.nombre + " ×" + e.sets).join(" · ") })
+    )),
+    h("button", { class: "rt-opcion", onclick: () => empezar(null) },
+      h("span", { class: "rt-opcion-n", text: "Sesión libre" }),
+      h("span", { class: "rt-opcion-d", text: "Empieza en blanco y añade lo que quieras" })
+    ),
+    h("button", { class: "rt-cerrar", text: "Cancelar", onclick: cerrar })
+  );
+
+  return h("div", { class: "rt-capa", onclick: cerrar }, hoja);
+}
+
+/* ================================ 3. Sesión =============================== */
+
+function pantallaSesion(sesion) {
+  const previas = marcasAntesDe(estado.sesiones, sesion);
+  const recs = recordsDeSesion(sesion, estado.sesiones);
+  const nRecs = Object.keys(recs).length;
+
+  const marcador = h("div", { class: "rt-marcador" },
+    h("span", { class: "rt-marcador-num", text: textoMarcador(sesion) }),
+    h("span", { class: "rt-marcador-uni", text: textoRecords(nRecs) })
+  );
+
+  const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
+    h("button", { class: "rt-volver", text: "← Historial", onclick: salirDeSesion }),
+    marcador
+  );
+
+  const campos = h("div", { class: "rt-campos" },
+    h("label", { class: "rt-campo" },
+      h("span", { class: "rt-label", text: "Fecha" }),
+      h("input", { type: "date", value: sesion.fecha,
+        onchange: (e) => { sesion.fecha = e.target.value; guardar(); refrescarSesion(); } })
+    ),
+    h("label", { class: "rt-campo" },
+      h("span", { class: "rt-label", text: "Rutina" }),
+      h("input", { value: sesion.tipo, autocapitalize: "words",
+        oninput: (e) => { sesion.tipo = e.target.value; guardar(); } })
+    )
+  );
+
+  const bloques = sesion.ejercicios.map((ej, i) => bloqueEjercicio(sesion, ej, i, previas, recs));
+
+  const anadir = estado.anadiendo === "sesion"
+    ? bloqueNuevoEjercicio(
+        (nuevo) => {
+          sesion.ejercicios.push(Object.assign({}, nuevo, {
+            id: uid(),
+            series: Array.from({ length: nuevo.sets }, nuevaSerie),
+          }));
+          estado.anadiendo = null;
+          guardar(true);
+          render();
+        },
+        () => { estado.anadiendo = null; render(); }
+      )
+    : h("button", { class: "rt-anadir", text: "+ Añadir ejercicio",
+        onclick: () => { estado.anadiendo = "sesion"; render(); } });
+
+  const notas = h("label", { class: "rt-campo rt-notas" },
+    h("span", { class: "rt-label", text: "Notas" }),
+    h("textarea", { rows: 3, placeholder: "Sensaciones, descansos, qué subir la próxima vez…",
+      oninput: (e) => { sesion.notas = e.target.value; guardar(); } }, sesion.notas || "")
+  );
+
+  const borrado = estado.confirmarBorrado
+    ? h("div", { class: "rt-confirmar" },
+        h("p", { text: "Se borrará esta sesión entera." }),
+        h("div", { class: "rt-confirmar-pie" },
+          h("button", { text: "Cancelar", onclick: () => { estado.confirmarBorrado = false; render(); } }),
+          h("button", { class: "rt-borrar", text: "Borrar sesión", onclick: () => {
+            estado.sesiones = estado.sesiones.filter((s) => s.id !== sesion.id);
+            estado.confirmarBorrado = false;
+            guardar(true);
+            irA("historial");
+          }})
+        )
+      )
+    : h("button", { class: "rt-borrar-sesion", text: "Borrar sesión",
+        onclick: () => { estado.confirmarBorrado = true; render(); } });
+
+  return [cabecera, h("main", { class: "rt-main" }, campos, bloques, anadir, notas, borrado)];
+}
+
+const textoMarcador = (s) => {
+  const seg = segSesion(s);
+  return numero(kgSesion(s)) + (seg > 0 ? " · " + seg + "s" : "");
+};
+const textoRecords = (n) =>
+  n > 0 ? "en esta sesión · " + n + (n === 1 ? " récord" : " récords") : "en esta sesión";
+
+function bloqueEjercicio(sesion, ej, i, previas, recs) {
+  const setEj = () => { guardar(true); render(); };
+  const prev = ultimaVez(estado.sesiones, ej.nombre, sesion.id);
+  const marca = previas.get(clave(ej.nombre));
+
+  const cab = h("div", { class: "rt-ej-cab" },
+    h("h2", { class: "rt-ej-t", text: ej.nombre || "Ejercicio" }),
+    h("div", { class: "rt-ej-acciones" },
+      h("button", { class: "rt-orden", text: "↑", disabled: i === 0, "aria-label": "Subir " + ej.nombre,
+        onclick: () => { sesion.ejercicios = mover(sesion.ejercicios, i, -1); setEj(); } }),
+      h("button", { class: "rt-orden", text: "↓", disabled: i === sesion.ejercicios.length - 1,
+        "aria-label": "Bajar " + ej.nombre,
+        onclick: () => { sesion.ejercicios = mover(sesion.ejercicios, i, 1); setEj(); } }),
+      h("button", { class: "rt-borrar rt-mini", text: "Quitar",
+        onclick: () => { sesion.ejercicios.splice(i, 1); setEj(); } })
+    )
+  );
+
+  const linea = prev ? [
+    h("p", { class: "rt-prev" },
+      h("span", { text: "Última vez (" + fechaCorta(prev.fecha) + ")" }), " " + prev.texto,
+      marca ? [" ", h("span", { text: "· a batir" }), " " + marca.p + " " + unidadEj(ej)] : null),
+    prev.nota ? h("p", { class: "rt-prev rt-prev-nota" },
+      h("span", { text: "Apuntaste" }), " " + prev.nota) : null,
+  ] : null;
+
+  const series = ej.series.map((r, j) => {
+    const fila = h("div", { class: "rt-serie-fila", dataset: { fila: "1", ej: i, serie: j } },
+      h("span", { class: "rt-serie-n", text: j + 1 }),
+      h("span", { class: "rt-disco", style: { background: colorEj(ej, r) } }),
+      medida(ej.medida === "seg" ? "seg" : "reps",
+        { class: "rt-num", inputmode: "numeric", value: r.valor,
+          "aria-label": ej.medida === "seg" ? "Segundos" : "Repeticiones",
+          oninput: (e) => { r.valor = e.target.value; guardar(); refrescarSesion(); } }),
+      ej.peso ? medida("kg",
+        { class: "rt-num", inputmode: "decimal", value: r.peso, "aria-label": "Peso en kilos",
+          oninput: (e) => { r.peso = e.target.value; guardar(); refrescarSesion(); } }) : null,
+      ej.cm ? medida("cm",
+        { class: "rt-num", inputmode: "decimal", value: r.cm, "aria-label": "Distancia en centímetros",
+          oninput: (e) => { r.cm = e.target.value; guardar(); refrescarSesion(); } }) : null,
+      h("span", { class: recs[i] === j ? "rt-pr" : "rt-pr es-oculto", text: "PR" }),
+      h("button", { class: "rt-x", text: "×", "aria-label": "Quitar set " + (j + 1),
+        onclick: () => { ej.series.splice(j, 1); setEj(); } })
+    );
+    const prog = ej.progresion ? h("input", { class: "rt-prog", list: "rt-prog", value: r.progresion,
+      placeholder: "Progresión (tuck, straddle, full…)", "aria-label": "Progresión",
+      oninput: (e) => { r.progresion = e.target.value; guardar(); } }) : null;
+    return h("div", { class: "rt-serie" }, fila, prog);
+  });
+
+  const pie = h("div", { class: "rt-ej-pie" },
+    h("button", { text: "+ Set", onclick: () => {
+      const ult = ej.series[ej.series.length - 1];
+      const s = nuevaSerie();
+      if (ult) { s.peso = ult.peso; s.cm = ult.cm; s.progresion = ult.progresion; }
+      ej.series.push(s);
+      setEj();
+    }}),
+    h("button", { text: "Medir en " + (ej.medida === "seg" ? "reps" : "segundos"),
+      onclick: () => { ej.medida = ej.medida === "seg" ? "reps" : "seg"; setEj(); } }),
+    h("button", { text: ej.peso ? "Sin kg" : "+ kg",
+      onclick: () => { ej.peso = !ej.peso; setEj(); } }),
+    h("button", { text: ej.cm ? "Sin cm" : "+ cm",
+      onclick: () => { ej.cm = !ej.cm; setEj(); } }),
+    h("button", { text: ej.progresion ? "Sin progresión" : "+ progresión",
+      onclick: () => { ej.progresion = !ej.progresion; setEj(); } })
+  );
+
+  const notas = h("div", { class: "rt-ej-notas" },
+    h("textarea", { rows: 1, "aria-label": "Notas de " + (ej.nombre || "el ejercicio"),
+      placeholder: "Notas del ejercicio: técnica, sensaciones, qué tocar la próxima vez…",
+      oninput: (e) => { ej.notas = e.target.value; autoAlto(e.target); guardar(); } },
+      ej.notas || "")
+  );
+  setTimeout(() => autoAlto(notas.firstChild), 0);
+
+  return h("section", { class: "rt-ej" }, cab, linea, series, pie, notas);
+}
+
+/* Un campo numérico con su unidad al lado */
+function medida(unidad, props) {
+  return h("span", { class: "rt-medida" }, h("input", props), h("span", { class: "rt-uni", text: unidad }));
+}
+
+/* El recuadro de notas crece con el texto */
+function autoAlto(el) {
+  if (!el) return;
+  el.style.height = "auto";
+  el.style.height = el.scrollHeight + "px";
+}
+
+/* Actualiza colores, PR y marcador sin reconstruir la pantalla */
+function refrescarSesion() {
+  const s = sesionActual();
+  if (!s) return;
+  const recs = recordsDeSesion(s, estado.sesiones);
+  document.querySelectorAll("[data-fila]").forEach((fila) => {
+    const i = Number(fila.dataset.ej), j = Number(fila.dataset.serie);
+    const ej = s.ejercicios[i];
+    if (!ej) return;
+    const r = ej.series[j];
+    if (!r) return;
+    const disco = fila.querySelector(".rt-disco");
+    if (disco) disco.style.background = colorEj(ej, r);
+    const pr = fila.querySelector(".rt-pr");
+    if (pr) pr.classList.toggle("es-oculto", recs[i] !== j);
+  });
+  const num = raiz.querySelector(".rt-marcador-num");
+  const uni = raiz.querySelector(".rt-marcador-uni");
+  if (num) num.textContent = textoMarcador(s);
+  if (uni) uni.textContent = textoRecords(Object.keys(recs).length);
+}
+
+/* =========================== 4. Nuevo ejercicio =========================== */
+
+function bloqueNuevoEjercicio(onAnadir, onCancelar) {
+  const borrador = { nombre: "", medida: "reps", peso: false, cm: false, progresion: false, sets: 3 };
+
+  const nombre = h("input", { list: "rt-nombres", placeholder: "Nombre del ejercicio",
+    autocapitalize: "words", oninput: (e) => { borrador.nombre = e.target.value; ok.disabled = !borrador.nombre.trim(); } });
+
+  const btn = (texto, activo, alPulsar) => {
+    const b = h("button", { class: activo() ? "es-activo" : "", text: texto });
+    b.addEventListener("click", () => { alPulsar(); pintar(); });
+    return b;
+  };
+  const toggles = h("div", { class: "rt-toggles" });
+  function pintar() {
+    toggles.textContent = "";
+    anexar(toggles, [
+      btn("Reps", () => borrador.medida === "reps", () => { borrador.medida = "reps"; }),
+      btn("Segundos", () => borrador.medida === "seg", () => { borrador.medida = "seg"; }),
+      btn("kg", () => borrador.peso, () => { borrador.peso = !borrador.peso; }),
+      btn("cm", () => borrador.cm, () => { borrador.cm = !borrador.cm; }),
+      btn("Progresión", () => borrador.progresion, () => { borrador.progresion = !borrador.progresion; }),
+    ]);
+  }
+  pintar();
+
+  const cuenta = h("strong", { text: borrador.sets });
+  const sets = h("div", { class: "rt-sets-num" },
+    h("span", { class: "rt-label", text: "Sets" }),
+    h("button", { text: "−", "aria-label": "Menos sets",
+      onclick: () => { borrador.sets = Math.max(1, borrador.sets - 1); cuenta.textContent = borrador.sets; } }),
+    cuenta,
+    h("button", { text: "+", "aria-label": "Más sets",
+      onclick: () => { borrador.sets++; cuenta.textContent = borrador.sets; } })
+  );
+
+  const ok = h("button", { class: "rt-ok", text: "Añadir", disabled: true,
+    onclick: () => {
+      if (!borrador.nombre.trim()) return;
+      onAnadir(Object.assign({}, borrador, { nombre: borrador.nombre.trim() }));
+    } });
+
+  const bloque = h("div", { class: "rt-nuevo" }, nombre, toggles, sets,
+    h("div", { class: "rt-nuevo-pie" },
+      h("button", { text: "Cancelar", onclick: onCancelar }),
+      ok
+    )
+  );
+  setTimeout(() => nombre.focus(), 30);
+  return bloque;
+}
+
+/* ============================== 5. Progreso =============================== */
+
+function pantallaProgreso() {
+  const mapa = new Map();
+  estado.sesiones.slice().sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).forEach((s) =>
+    (s.ejercicios || []).forEach((e) => {
+      const k = clave(e.nombre);
+      if (!k) return;
+      const hechas = (e.series || [])
+        .map((r) => ({ m: marcaSerie(e, r), texto: resumenSerie(e, r) }))
+        .filter((x) => x.m);
+      if (!hechas.length) return;
+      const top = hechas.reduce((a, b) => (comparar(b.m, a.m) > 0 ? b : a));
+      if (!mapa.has(k)) mapa.set(k, { clave: k, nombre: (e.nombre || "").trim(), puntos: [] });
+      const g = mapa.get(k);
+      g.nombre = (e.nombre || "").trim();
+      g.unidad = unidadEj(e);
+      g.puntos.push({ fecha: s.fecha, valor: top.m.p, desempate: top.m.s, texto: top.texto, series: hechas.length });
+    })
+  );
+
+  const ejercicios = [...mapa.values()].map((g) => {
+    const mejor = g.puntos.reduce((a, b) =>
+      (b.valor > a.valor || (b.valor === a.valor && b.desempate > a.desempate)) ? b : a);
+    return Object.assign({}, g, { mejor: mejor, ultima: g.puntos[g.puntos.length - 1] });
+  }).sort((a, b) => (a.ultima.fecha < b.ultima.fecha ? 1 : -1));
+
+  const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
+    h("h1", { class: "rt-titulo rt-titulo-sm", text: "PROGRESO" }),
+    h("span", { class: "rt-marcador-uni", text: ejercicios.length + " ejercicios registrados" })
+  );
+
+  const cuerpo = ejercicios.length === 0
+    ? h("div", { class: "rt-vacio" },
+        h("p", { class: "rt-vacio-t", text: "Nada que medir todavía." }),
+        h("p", { class: "rt-vacio-d", text: "Registra una sesión con reps, segundos o kg y aquí verás tus récords y cómo evoluciona cada ejercicio." })
+      )
+    : ejercicios.map((g) => {
+        const abierta = estado.abiertoProgreso === g.clave;
+        const puntos = g.puntos.slice(-14);
+        const max = Math.max.apply(null, puntos.map((p) => p.valor).concat([1]));
+        const fresco = g.ultima.fecha === g.mejor.fecha && g.puntos.length > 1;
+
+        const cab = h("div", { class: "rt-ej-cab" },
+          h("button", { class: "rt-plantilla-t", "aria-expanded": abierta ? "true" : "false",
+            onclick: () => { estado.abiertoProgreso = abierta ? null : g.clave; render(); } },
+            g.nombre,
+            h("span", { class: "rt-plantilla-c",
+              text: g.puntos.length + (g.puntos.length === 1 ? " sesión" : " sesiones") + " · última el " + fechaCorta(g.ultima.fecha) })
+          ),
+          h("span", { class: "rt-record" + (fresco ? " es-fresco" : "") },
+            h("span", { class: "rt-record-num", text: g.mejor.valor }),
+            h("span", { class: "rt-record-uni", text: g.unidad + " máx." })
+          )
+        );
+
+        const barras = h("div", { class: "rt-barras", role: "img", "aria-label": "Evolución de " + g.nombre },
+          puntos.map((p) => h("span", {
+            class: "rt-barra" + (p.valor === g.mejor.valor ? " es-max" : ""),
+            style: { height: Math.max(8, (p.valor / max) * 100) + "%" },
+            title: fechaCorta(p.fecha) + " · " + p.texto,
+          })));
+
+        const piePeriodo = h("p", { class: "rt-barras-pie" },
+          h("span", { text: fechaCorta(puntos[0].fecha) }),
+          h("span", { text: fechaCorta(puntos[puntos.length - 1].fecha) })
+        );
+
+        const detalle = abierta ? h("div", { class: "rt-plantilla-cuerpo" },
+          h("p", { class: "rt-prev" },
+            h("span", { text: "Mejor serie" }), " " + g.mejor.texto + " · " + fechaCorta(g.mejor.fecha)),
+          h("ul", { class: "rt-hist" }, g.puntos.slice().reverse().slice(0, 10).map((p) =>
+            h("li", null,
+              h("span", { class: "rt-hist-f", text: fechaCorta(p.fecha) }),
+              h("span", { class: "rt-hist-t", text: p.texto }),
+              h("span", { class: "rt-hist-s", text: p.series + (p.series === 1 ? " set" : " sets") })
+            )))
+        ) : null;
+
+        return h("section", { class: "rt-ej" }, cab, barras, piePeriodo, detalle);
+      });
+
+  return [cabecera, nav("progreso"), h("main", { class: "rt-main" }, cuerpo)];
+}
+
+/* ============================== 6. Plantillas ============================= */
+
+function pantallaPlantillas() {
+  const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
+    h("h1", { class: "rt-titulo rt-titulo-sm", text: "PLANTILLAS" }),
+    h("span", { class: "rt-marcador-uni", text: estado.plantillas.length + " rutinas" })
+  );
+
+  const bloques = estado.plantillas.map((p) => {
+    const abierta = estado.abiertaPlantilla === p.id;
+    const nombreEl = document.createTextNode(p.nombre);
+
+    const cab = h("div", { class: "rt-ej-cab" },
+      h("button", { class: "rt-plantilla-t", "aria-expanded": abierta ? "true" : "false",
+        onclick: () => { estado.abiertaPlantilla = abierta ? null : p.id; estado.anadiendo = null; render(); } },
+        nombreEl,
+        h("span", { class: "rt-plantilla-c",
+          text: p.ejercicios.length + " ejercicios · " + p.ejercicios.reduce((t, e) => t + e.sets, 0) + " sets" })
+      ),
+      h("button", { class: "rt-mini", text: "Usar", onclick: () => empezar(p) })
+    );
+
+    let cuerpo = null;
+    if (abierta) {
+      const campoNombre = h("label", { class: "rt-campo" },
+        h("span", { class: "rt-label", text: "Nombre de la rutina" }),
+        h("input", { value: p.nombre, autocapitalize: "words",
+          oninput: (e) => { p.nombre = e.target.value; nombreEl.nodeValue = p.nombre; guardar(); } })
+      );
+
+      const defs = p.ejercicios.map((e, i) => {
+        const rehacer = () => { guardar(true); render(); };
+        const cuenta = h("strong", { text: e.sets });
+        const fila = h("div", { class: "rt-def-fila" },
+          h("input", { class: "rt-def-nombre", list: "rt-nombres", value: e.nombre, autocapitalize: "words",
+            oninput: (ev) => { e.nombre = ev.target.value; guardar(); } }),
+          h("div", { class: "rt-sets-num rt-sets-inline" },
+            h("button", { text: "−", "aria-label": "Menos sets",
+              onclick: () => { e.sets = Math.max(1, e.sets - 1); cuenta.textContent = e.sets; guardar(); } }),
+            cuenta,
+            h("button", { text: "+", "aria-label": "Más sets",
+              onclick: () => { e.sets++; cuenta.textContent = e.sets; guardar(); } })
+          ),
+          h("button", { class: "rt-x", text: "×", "aria-label": "Quitar " + e.nombre,
+            onclick: () => { p.ejercicios.splice(i, 1); rehacer(); } })
+        );
+
+        const t = (texto, activo, alPulsar) => h("button", { class: activo ? "es-activo" : "", text: texto,
+          onclick: () => { alPulsar(); rehacer(); } });
+
+        const toggles = h("div", { class: "rt-toggles rt-toggles-sm" },
+          t("Reps", e.medida === "reps", () => { e.medida = "reps"; }),
+          t("Segundos", e.medida === "seg", () => { e.medida = "seg"; }),
+          t("kg", e.peso, () => { e.peso = !e.peso; }),
+          t("cm", e.cm, () => { e.cm = !e.cm; }),
+          t("Progresión", e.progresion, () => { e.progresion = !e.progresion; }),
+          h("button", { class: "rt-orden", text: "↑", disabled: i === 0, "aria-label": "Subir " + e.nombre,
+            onclick: () => { p.ejercicios = mover(p.ejercicios, i, -1); rehacer(); } }),
+          h("button", { class: "rt-orden", text: "↓", disabled: i === p.ejercicios.length - 1,
+            "aria-label": "Bajar " + e.nombre,
+            onclick: () => { p.ejercicios = mover(p.ejercicios, i, 1); rehacer(); } })
+        );
+
+        return h("div", { class: "rt-def" }, fila, toggles);
+      });
+
+      const anadir = estado.anadiendo === p.id
+        ? bloqueNuevoEjercicio(
+            (nuevo) => { p.ejercicios.push(Object.assign({}, nuevo, { id: uid() })); estado.anadiendo = null; guardar(true); render(); },
+            () => { estado.anadiendo = null; render(); })
+        : h("button", { class: "rt-anadir", text: "+ Añadir ejercicio a " + p.nombre,
+            onclick: () => { estado.anadiendo = p.id; render(); } });
+
+      cuerpo = h("div", { class: "rt-plantilla-cuerpo" }, campoNombre, defs, anadir,
+        h("button", { class: "rt-borrar-sesion", text: "Borrar plantilla", onclick: () => {
+          estado.plantillas = estado.plantillas.filter((x) => x.id !== p.id);
+          estado.abiertaPlantilla = null;
+          guardar(true);
+          render();
+        }})
+      );
+    }
+
+    return h("section", { class: "rt-plantilla" }, cab, cuerpo);
+  });
+
+  const nueva = h("button", { class: "rt-anadir", text: "+ Nueva plantilla", onclick: () => {
+    const p = { id: uid(), nombre: "Rutina nueva", tipo: "Fuerza", ejercicios: [] };
+    estado.plantillas.push(p);
+    estado.abiertaPlantilla = p.id;
+    guardar(true);
+    render();
+  }});
+
+  const reset = estado.confirmarReset
+    ? h("div", { class: "rt-confirmar" },
+        h("p", { text: "Volverán las cinco rutinas originales y se perderán tus cambios en las plantillas. Las sesiones ya registradas no se tocan." }),
+        h("div", { class: "rt-confirmar-pie" },
+          h("button", { text: "Cancelar", onclick: () => { estado.confirmarReset = false; render(); } }),
+          h("button", { class: "rt-borrar", text: "Restaurar", onclick: () => {
+            estado.plantillas = PLANTILLAS_BASE();
+            estado.confirmarReset = false;
+            estado.abiertaPlantilla = null;
+            guardar(true);
+            render();
+          }})
+        )
+      )
+    : h("button", { class: "rt-borrar-sesion", text: "Restaurar plantillas originales",
+        onclick: () => { estado.confirmarReset = true; render(); } });
+
+  return [cabecera, nav("plantillas"), h("main", { class: "rt-main" }, bloques, nueva, reset)];
+}
+
+/* ================================ 7. Datos ================================ */
+
+function paqueteCopia() {
+  return JSON.stringify({
+    app: "Canicktenia",
+    version: 1,
+    exportado: new Date().toISOString(),
+    sesiones: estado.sesiones,
+    plantillas: estado.plantillas,
+  }, null, 2);
+}
+
+function pantallaDatos() {
+  const primera = estado.sesiones.slice().sort((a, b) => (a.fecha < b.fecha ? -1 : 1))[0];
+  const nombreArchivo = "canicktenia-" + hoy() + ".json";
+
+  const poner = (tipo, texto) => { estado.aviso = { tipo: tipo, texto: texto }; render(); };
+
+  const compartir = async () => {
+    try {
+      const archivo = new File([paqueteCopia()], nombreArchivo, { type: "application/json" });
+      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
+        await navigator.share({ files: [archivo], title: "Copia de Canicktenia" });
+        return;
+      }
+      poner("error", "Compartir no está disponible aquí. Prueba con «Descargar copia».");
+    } catch (e) {
+      if (e && e.name === "AbortError") return;
+      poner("error", "No he podido compartir la copia. Prueba con «Descargar copia».");
+    }
+  };
+
+  const descargar = () => {
+    try {
+      const url = URL.createObjectURL(new Blob([paqueteCopia()], { type: "application/json" }));
+      const a = h("a", { href: url, download: nombreArchivo });
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      poner("ok", "Copia descargada como " + nombreArchivo + ".");
+    } catch (e) {
+      poner("error", "La descarga no ha salido. Usa «Copiar al portapapeles» y guarda el texto donde quieras.");
+    }
+  };
+
+  const copiar = async () => {
+    try {
+      await navigator.clipboard.writeText(paqueteCopia());
+      poner("ok", "Copia en el portapapeles.");
+    } catch (e) {
+      poner("error", "El portapapeles está bloqueado. Prueba con «Compartir copia».");
+    }
+  };
+
+  const leer = (raw) => {
+    let d;
+    try { d = JSON.parse(raw); }
+    catch (e) { return poner("error", "Ese texto no es un JSON válido."); }
+    const ses = Array.isArray(d) ? d : (Array.isArray(d.sesiones) ? d.sesiones : null);
+    if (!ses) return poner("error", "No encuentro sesiones en el archivo. Debe ser una copia hecha desde el cuaderno.");
+    estado.pendiente = {
+      sesiones: ses.map(sanearSesion),
+      plantillas: Array.isArray(d.plantillas) ? d.plantillas.map(sanearPlantilla) : [],
+    };
+    estado.aviso = null;
+    render();
+  };
+
+  const desdeArchivo = (file) => {
+    if (!file) return;
+    const lector = new FileReader();
+    lector.onload = () => leer(String(lector.result || ""));
+    lector.onerror = () => poner("error", "No he podido abrir el archivo. Inténtalo otra vez.");
+    lector.readAsText(file);
+  };
+
+  const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
+    h("h1", { class: "rt-titulo rt-titulo-sm", text: "DATOS" }),
+    h("span", { class: "rt-marcador-uni", text: "Copia de seguridad" })
+  );
+
+  const banda = h("div", { class: "rt-banda rt-banda-suelta" },
+    dato(estado.sesiones.length, estado.sesiones.length === 1 ? "sesión" : "sesiones"),
+    dato(estado.plantillas.length, "plantillas"),
+    dato(primera ? partesFecha(primera.fecha).dia : "—", primera ? "desde " + fechaCorta(primera.fecha) : "sin registro")
+  );
+
+  const guardarSec = h("section", { class: "rt-ej" },
+    h("h2", { class: "rt-ej-t", text: "Guardar una copia" }),
+    h("p", { class: "rt-nota", text: "Un archivo con todas tus sesiones y plantillas. Guárdalo en Archivos, en el correo o donde quieras: con él recuperas el cuaderno en cualquier dispositivo." }),
+    h("div", { class: "rt-acciones" },
+      h("button", { class: "rt-boton", text: "Compartir copia", onclick: compartir }),
+      h("button", { class: "rt-boton", text: "Descargar copia", onclick: descargar }),
+      h("button", { class: "rt-boton", text: "Copiar al portapapeles", onclick: copiar })
+    )
+  );
+
+  const textarea = h("textarea", { rows: 4, placeholder: '{"app":"Canicktenia", …}',
+    oninput: (e) => { estado.textoCopia = e.target.value; revisar.disabled = !estado.textoCopia.trim(); } },
+    estado.textoCopia);
+  const revisar = h("button", { class: "rt-boton", text: "Revisar el texto pegado",
+    disabled: !estado.textoCopia.trim(), onclick: () => leer(estado.textoCopia) });
+
+  const recuperarSec = h("section", { class: "rt-ej" },
+    h("h2", { class: "rt-ej-t", text: "Recuperar una copia" }),
+    h("p", { class: "rt-nota", text: "Las sesiones del archivo sustituyen a las de ahora. Vale también una copia exportada desde el cuaderno anterior. Guarda una copia antes si no quieres perder lo que tienes." }),
+    h("div", { class: "rt-acciones" },
+      h("label", { class: "rt-boton rt-archivo" }, "Elegir archivo",
+        h("input", { type: "file", accept: "application/json,.json,.txt",
+          onchange: (e) => desdeArchivo(e.target.files && e.target.files[0]) }))
+    ),
+    h("label", { class: "rt-campo rt-notas" },
+      h("span", { class: "rt-label", text: "O pega aquí el texto de la copia" }),
+      textarea
+    ),
+    revisar
+  );
+
+  const aviso = estado.aviso
+    ? h("p", { class: estado.aviso.tipo === "error" ? "rt-aviso rt-aviso-error" : "rt-aviso", text: estado.aviso.texto })
+    : null;
+
+  const pend = estado.pendiente;
+  const confirmacion = pend
+    ? h("div", { class: "rt-confirmar" },
+        h("p", { text: "La copia trae " + pend.sesiones.length + (pend.sesiones.length === 1 ? " sesión" : " sesiones") +
+          (pend.plantillas.length ? " y " + pend.plantillas.length + " plantillas" : "") +
+          ". Sustituirá lo que tienes ahora (" + estado.sesiones.length +
+          (estado.sesiones.length === 1 ? " sesión" : " sesiones") + ")." }),
+        h("div", { class: "rt-confirmar-pie" },
+          h("button", { text: "Cancelar", onclick: () => { estado.pendiente = null; render(); } }),
+          h("button", { class: "rt-borrar", text: "Recuperar", onclick: () => {
+            estado.sesiones = pend.sesiones;
+            if (pend.plantillas.length) estado.plantillas = pend.plantillas;
+            estado.pendiente = null;
+            estado.textoCopia = "";
+            estado.recienCreadas = [];
+            guardar(true);
+            irA("historial");
+          }})
+        )
+      )
+    : null;
+
+  return [cabecera, nav("datos"),
+    h("main", { class: "rt-main" }, banda, guardarSec, recuperarSec, aviso, confirmacion)];
+}
+
+/* ================================= Arranque =============================== */
+
+function aplicarRenombrados() {
+  let cambios = 0;
+  const renombrar = (lista) => (lista || []).forEach((e) => {
+    const nuevo = RENOMBRES[clave(e.nombre)];
+    if (nuevo && e.nombre !== nuevo) { e.nombre = nuevo; cambios++; }
+  });
+  estado.plantillas.forEach((p) => renombrar(p.ejercicios));
+  estado.sesiones.forEach((s) => renombrar(s.ejercicios));
+  return cambios;
+}
+
+function arrancar() {
+  const ses = almacen.leer(K_SESIONES);
+  estado.sesiones = Array.isArray(ses) ? ses.map(sanearSesion) : [];
+  const pl = almacen.leer(K_PLANTILLAS);
+  estado.plantillas = Array.isArray(pl) && pl.length ? pl.map(sanearPlantilla) : PLANTILLAS_BASE();
+
+  if ((Number(almacen.leer(K_VERSION)) || 1) < VERSION_DATOS) {
+    aplicarRenombrados();
+    almacen.escribir(K_VERSION, VERSION_DATOS);
+  }
+
+  render();
+  guardar(true);
+}
+
+arrancar();
+
+/* Guarda al salir o al pasar la app a segundo plano */
+document.addEventListener("visibilitychange", () => { if (document.hidden) guardar(true); });
+window.addEventListener("pagehide", () => guardar(true));
+
+/* Funcionamiento sin conexión */
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("sw.js").catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
