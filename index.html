@@ -123,7 +123,7 @@ textarea{resize:vertical;}
 .rt-borrar{color:var(--sangre);}
 .rt-prev{margin:4px 0 10px;font-size:11px;color:var(--humo);line-height:1.5;}
 .rt-prev span{text-transform:uppercase;letter-spacing:.08em;font-size:9px;}
-.rt-prev-nota{margin-top:-7px;padding-left:8px;border-left:2px solid var(--linea);}
+.rt-prev-marca,.rt-prev-nota{margin-top:-7px;padding-left:8px;border-left:2px solid var(--linea);}
 .rt-nota{margin:6px 0 12px;font-size:13px;line-height:1.5;color:var(--humo);max-width:44ch;}
 
 .rt-serie{margin-bottom:8px;}
@@ -185,15 +185,23 @@ textarea{resize:vertical;}
 .rt-def-fila{display:flex;align-items:center;gap:8px;}
 .rt-def-nombre{font-size:16px;padding:10px 11px;}
 
-.rt-record{text-align:right;line-height:1.1;flex-shrink:0;}
-.rt-record-num{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:18px;font-weight:600;}
-.rt-record-uni{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
-.rt-record.es-fresco .rt-record-num{color:var(--sangre);}
+.rt-marca{text-align:right;line-height:1.25;flex-shrink:0;max-width:46%;}
+.rt-marca-t{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:600;}
+.rt-marca-uni{display:block;margin-top:2px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--humo);}
+.rt-marca.es-fresco .rt-marca-t{color:var(--sangre);}
 .rt-barras{display:flex;align-items:flex-end;gap:3px;height:54px;margin-top:14px;}
 .rt-barra{flex:1;min-width:3px;background:var(--hierro);opacity:.75;}
 .rt-barra.es-max{background:var(--sangre);opacity:1;}
-.rt-barras-pie{display:flex;justify-content:space-between;margin:5px 0 0;font-size:9px;
-  letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
+.rt-barras-pie{display:flex;justify-content:space-between;gap:8px;margin:5px 0 0;font-size:9px;
+  letter-spacing:.07em;text-transform:uppercase;color:var(--humo);}
+.rt-barras-pie span:nth-child(2){text-align:center;letter-spacing:.04em;}
+.rt-marcas-cab{margin:0 0 4px;}
+.rt-marcas{list-style:none;margin:0 0 4px;padding:0;}
+.rt-marcas li{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-top:1px solid var(--linea);}
+.rt-marcas-t{flex:1;min-width:0;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:13px;}
+.rt-marcas li.es-tope .rt-marcas-t{font-weight:600;}
+.rt-marcas-f{flex-shrink:0;font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--humo);}
+.rt-hist-cab{margin:16px 0 0;}
 .rt-hist{list-style:none;margin:10px 0 0;padding:0;}
 .rt-hist li{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-top:1px solid var(--linea);font-size:13px;}
 .rt-hist-f{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;color:var(--humo);width:52px;flex-shrink:0;}
@@ -417,15 +425,111 @@ const resumenSerie = (e, r) => {
   return p.join(" · ");
 };
 
-const marcaSerie = (e, r) => {
+/* ---------------------------------- Marcas ---------------------------------
+   Una serie no vale por un solo número: 12 reps con 15 kg y 8 reps con 20 kg
+   son dos marcas distintas, y ninguna es peor que la otra. Cada serie se
+   describe por sus dimensiones — rendimiento (reps o segundos) y dificultad
+   (kg, cm, progresión) — y una marca solo supera a otra si no queda por
+   debajo en ninguna. Las que nadie supera son las marcas del ejercicio. */
+
+const NIVELES = {
+  "pies apoyados": 0, "pies en el suelo": 0, "banda": 1, "goma": 1,
+  "tuck": 2, "adv. tuck": 3, "adv tuck": 3, "advanced tuck": 3,
+  "straddle": 4, "half lay": 5, "half-lay": 5, "halflay": 5,
+  "full": 6, "full lay": 6,
+};
+const nivelProg = (t) => {
+  const k = clave(t);
+  return k in NIVELES ? NIVELES[k] : null;
+};
+
+const dimsSerie = (ej, r) => {
   const valor = Number(r.valor) || 0;
   if (!valor) return null;
-  if (e.medida === "seg") return { p: valor, s: Number(r.peso) || 0 };
-  if (e.peso) return { p: Number(r.peso) || 0, s: valor };
-  return { p: valor, s: 0 };
+  const dims = [{ tipo: ej.medida === "seg" ? "seg" : "reps", n: valor }];
+  const kg = ej.peso ? Number(r.peso) || 0 : 0;
+  if (kg > 0) dims.push({ tipo: "kg", n: kg });
+  const cm = ej.cm ? Number(r.cm) || 0 : 0;
+  if (cm > 0) dims.push({ tipo: "cm", n: cm });
+  const pr = ej.progresion ? (r.progresion || "").trim() : "";
+  if (pr) dims.push({ tipo: "prog", n: nivelProg(pr), texto: pr });
+  return dims;
 };
-const comparar = (a, b) => a.p - b.p || a.s - b.s;
-const unidadEj = (e) => (e.medida === "seg" ? "s" : e.peso ? "kg" : "reps");
+
+const mapaDims = (dims) => {
+  const m = {};
+  dims.forEach((d) => { m[d.tipo] = d; });
+  return m;
+};
+const nd = (m, t) => (m[t] ? m[t].n : 0);
+const claveDims = (dims) => dims.slice()
+  .map((d) => d.tipo + ":" + (d.tipo === "prog" ? clave(d.texto) : d.n))
+  .sort().join("|");
+
+/* ¿A supera a B? Solo si no queda por debajo en nada y mejora en algo.
+   Dos progresiones que no sé ordenar (nombres propios) no se comparan. */
+const domina = (A, B) => {
+  const a = mapaDims(A), b = mapaDims(B);
+  const tipos = {};
+  A.forEach((d) => { tipos[d.tipo] = 1; });
+  B.forEach((d) => { tipos[d.tipo] = 1; });
+  let mejora = false;
+  for (const t in tipos) {
+    if (t === "prog") {
+      const na = a.prog ? a.prog.n : null, nb = b.prog ? b.prog.n : null;
+      if (na == null || nb == null) {
+        const ta = a.prog ? clave(a.prog.texto) : "", tb = b.prog ? clave(b.prog.texto) : "";
+        if (ta !== tb) return false;
+      } else if (na < nb) return false;
+      else if (na > nb) mejora = true;
+    } else {
+      const na = nd(a, t), nb = nd(b, t);
+      if (na < nb) return false;
+      if (na > nb) mejora = true;
+    }
+  }
+  return mejora;
+};
+
+/* De más dura a menos: primero la progresión, luego lastre, luego palanca */
+const porDureza = (x, y) => {
+  const a = mapaDims(x.dims || x), b = mapaDims(y.dims || y);
+  const np = (m) => (m.prog ? (m.prog.n == null ? -0.5 : m.prog.n) : -1);
+  const rend = (m) => nd(m, "reps") + nd(m, "seg");
+  return np(b) - np(a) || nd(b, "kg") - nd(a, "kg") || nd(b, "cm") - nd(a, "cm") || rend(b) - rend(a);
+};
+
+/* Las marcas que nadie supera, de la más dura a la más ligera */
+const frenteDe = (marcas) => {
+  const unicas = [];
+  const vistas = {};
+  marcas.forEach((m) => {
+    const k = claveDims(m.dims);
+    if (vistas[k]) { if (m.fecha < vistas[k].fecha) vistas[k].fecha = m.fecha; return; }
+    vistas[k] = m;
+    unicas.push(m);
+  });
+  return unicas
+    .filter((m) => !unicas.some((o) => o !== m && domina(o.dims, m.dims)))
+    .sort(porDureza);
+};
+
+const textoMarca = (dims) => {
+  const m = mapaDims(dims);
+  const partes = [];
+  if (m.reps) partes.push(m.reps.n + " reps");
+  if (m.seg) partes.push(m.seg.n + " s");
+  if (m.kg) partes.push(m.kg.n + " kg");
+  if (m.cm) partes.push(m.cm.n + " cm");
+  let t = partes.join(" × ");
+  if (m.prog) t += (t ? " · " : "") + m.prog.texto;
+  return t;
+};
+
+const rendimiento = (dims) => {
+  const m = mapaDims(dims);
+  return nd(m, "reps") + nd(m, "seg");
+};
 
 const colorEj = (ej, r) => {
   if (ej.medida === "seg") {
@@ -460,38 +564,56 @@ const ultimaVez = (sesiones, nombre, idActual) => {
   return null;
 };
 
-const marcasAntesDe = (sesiones, sesion) => {
-  const mapa = new Map();
+/* Marcas de cada ejercicio anteriores a esta sesión */
+const frentesAntesDe = (sesiones, sesion) => {
+  const bruto = new Map();
   sesiones.filter((s) => s.id !== sesion.id && s.fecha <= sesion.fecha).forEach((s) =>
     (s.ejercicios || []).forEach((e) => {
       const k = clave(e.nombre);
       if (!k) return;
       (e.series || []).forEach((r) => {
-        const m = marcaSerie(e, r);
-        if (!m) return;
-        const act = mapa.get(k);
-        if (!act || comparar(m, act) > 0) mapa.set(k, m);
+        const d = dimsSerie(e, r);
+        if (!d) return;
+        if (!bruto.has(k)) bruto.set(k, []);
+        bruto.get(k).push({ dims: d, fecha: s.fecha });
       });
     })
   );
-  return mapa;
+  const res = new Map();
+  bruto.forEach((lista, k) => res.set(k, frenteDe(lista)));
+  return res;
 };
 
+/* Series de hoy que amplían las marcas: ninguna anterior las supera */
 const recordsDeSesion = (sesion, sesiones) => {
-  const previas = marcasAntesDe(sesiones, sesion);
+  const previos = frentesAntesDe(sesiones, sesion);
   const res = {};
   (sesion.ejercicios || []).forEach((e, i) => {
-    const base = previas.get(clave(e.nombre));
-    if (!base) return;
-    let mejorJ = -1, mejorM = null;
+    const front = previos.get(clave(e.nombre));
+    if (!front || !front.length) return;
+    const propias = [];
     (e.series || []).forEach((r, j) => {
-      const m = marcaSerie(e, r);
-      if (!m || comparar(m, base) <= 0) return;
-      if (!mejorM || comparar(m, mejorM) > 0) { mejorM = m; mejorJ = j; }
+      const d = dimsSerie(e, r);
+      if (d) propias.push({ j: j, dims: d });
     });
-    if (mejorJ >= 0) res[i] = mejorJ;
+    const vistas = {};
+    propias.forEach((p) => {
+      if (front.some((m) => domina(m.dims, p.dims))) return;
+      if (propias.some((o) => o !== p && domina(o.dims, p.dims))) return;
+      const k = claveDims(p.dims);
+      if (vistas[k]) return;
+      vistas[k] = true;
+      if (!res[i]) res[i] = {};
+      res[i][p.j] = true;
+    });
   });
   return res;
+};
+
+const cuentaRecords = (recs) => {
+  let n = 0;
+  for (const i in recs) n += Object.keys(recs[i]).length;
+  return n;
 };
 
 const mover = (lista, i, dir) => {
@@ -810,9 +932,9 @@ function hojaSelector() {
 /* ================================ 3. Sesión =============================== */
 
 function pantallaSesion(sesion) {
-  const previas = marcasAntesDe(estado.sesiones, sesion);
+  const frentes = frentesAntesDe(estado.sesiones, sesion);
   const recs = recordsDeSesion(sesion, estado.sesiones);
-  const nRecs = Object.keys(recs).length;
+  const nRecs = cuentaRecords(recs);
 
   const marcador = h("div", { class: "rt-marcador" },
     h("span", { class: "rt-marcador-num", text: textoMarcador(sesion) }),
@@ -837,7 +959,7 @@ function pantallaSesion(sesion) {
     )
   );
 
-  const bloques = sesion.ejercicios.map((ej, i) => bloqueEjercicio(sesion, ej, i, previas, recs));
+  const bloques = sesion.ejercicios.map((ej, i) => bloqueEjercicio(sesion, ej, i, frentes, recs));
 
   const anadir = estado.anadiendo === "sesion"
     ? bloqueNuevoEjercicio(
@@ -887,10 +1009,10 @@ const textoMarcador = (s) => {
 const textoRecords = (n) =>
   n > 0 ? "en esta sesión · " + n + (n === 1 ? " récord" : " récords") : "en esta sesión";
 
-function bloqueEjercicio(sesion, ej, i, previas, recs) {
+function bloqueEjercicio(sesion, ej, i, frentes, recs) {
   const setEj = () => { guardar(true); render(); };
   const prev = ultimaVez(estado.sesiones, ej.nombre, sesion.id);
-  const marca = previas.get(clave(ej.nombre));
+  const front = frentes.get(clave(ej.nombre)) || [];
 
   const cab = h("div", { class: "rt-ej-cab" },
     h("h2", { class: "rt-ej-t", text: ej.nombre || "Ejercicio" }),
@@ -905,13 +1027,15 @@ function bloqueEjercicio(sesion, ej, i, previas, recs) {
     )
   );
 
-  const linea = prev ? [
-    h("p", { class: "rt-prev" },
-      h("span", { text: "Última vez (" + fechaCorta(prev.fecha) + ")" }), " " + prev.texto,
-      marca ? [" ", h("span", { text: "· a batir" }), " " + marca.p + " " + unidadEj(ej)] : null),
-    prev.nota ? h("p", { class: "rt-prev rt-prev-nota" },
+  const linea = [
+    prev ? h("p", { class: "rt-prev" },
+      h("span", { text: "Última vez (" + fechaCorta(prev.fecha) + ")" }), " " + prev.texto) : null,
+    front.length ? h("p", { class: "rt-prev rt-prev-marca" },
+      h("span", { text: front.length > 1 ? "Marcas a batir" : "Marca a batir" }),
+      " " + front.slice(0, 3).map((m) => textoMarca(m.dims)).join("   /   ")) : null,
+    prev && prev.nota ? h("p", { class: "rt-prev rt-prev-nota" },
       h("span", { text: "Apuntaste" }), " " + prev.nota) : null,
-  ] : null;
+  ];
 
   const series = ej.series.map((r, j) => {
     const fila = h("div", { class: "rt-serie-fila", dataset: { fila: "1", ej: i, serie: j } },
@@ -927,7 +1051,7 @@ function bloqueEjercicio(sesion, ej, i, previas, recs) {
       ej.cm ? medida("cm",
         { class: "rt-num", inputmode: "decimal", value: r.cm, "aria-label": "Distancia en centímetros",
           oninput: (e) => { r.cm = e.target.value; guardar(); refrescarSesion(); } }) : null,
-      h("span", { class: recs[i] === j ? "rt-pr" : "rt-pr es-oculto", text: "PR" }),
+      h("span", { class: recs[i] && recs[i][j] ? "rt-pr" : "rt-pr es-oculto", text: "PR" }),
       h("button", { class: "rt-x", text: "×", "aria-label": "Quitar set " + (j + 1),
         onclick: () => { ej.series.splice(j, 1); setEj(); } })
     );
@@ -992,12 +1116,12 @@ function refrescarSesion() {
     const disco = fila.querySelector(".rt-disco");
     if (disco) disco.style.background = colorEj(ej, r);
     const pr = fila.querySelector(".rt-pr");
-    if (pr) pr.classList.toggle("es-oculto", recs[i] !== j);
+    if (pr) pr.classList.toggle("es-oculto", !(recs[i] && recs[i][j]));
   });
   const num = raiz.querySelector(".rt-marcador-num");
   const uni = raiz.querySelector(".rt-marcador-uni");
   if (num) num.textContent = textoMarcador(s);
-  if (uni) uni.textContent = textoRecords(Object.keys(recs).length);
+  if (uni) uni.textContent = textoRecords(cuentaRecords(recs));
 }
 
 /* =========================== 4. Nuevo ejercicio =========================== */
@@ -1055,28 +1179,39 @@ function bloqueNuevoEjercicio(onAnadir, onCancelar) {
 /* ============================== 5. Progreso =============================== */
 
 function pantallaProgreso() {
-  const mapa = new Map();
+  const datos = new Map();
   estado.sesiones.slice().sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).forEach((s) =>
     (s.ejercicios || []).forEach((e) => {
       const k = clave(e.nombre);
       if (!k) return;
-      const hechas = (e.series || [])
-        .map((r) => ({ m: marcaSerie(e, r), texto: resumenSerie(e, r) }))
-        .filter((x) => x.m);
+      const hechas = [];
+      (e.series || []).forEach((r) => {
+        const d = dimsSerie(e, r);
+        if (d) hechas.push(d);
+      });
       if (!hechas.length) return;
-      const top = hechas.reduce((a, b) => (comparar(b.m, a.m) > 0 ? b : a));
-      if (!mapa.has(k)) mapa.set(k, { clave: k, nombre: (e.nombre || "").trim(), puntos: [] });
-      const g = mapa.get(k);
+      if (!datos.has(k)) datos.set(k, { clave: k, nombre: "", medida: "reps", marcas: [], puntos: [] });
+      const g = datos.get(k);
       g.nombre = (e.nombre || "").trim();
-      g.unidad = unidadEj(e);
-      g.puntos.push({ fecha: s.fecha, valor: top.m.p, desempate: top.m.s, texto: top.texto, series: hechas.length });
+      g.medida = e.medida;
+      const dura = hechas.slice().sort(porDureza)[0];
+      /* ¿Alguna serie de hoy era marca en el momento de hacerla? */
+      const marcaHoy = g.marcas.length > 0 &&
+        hechas.some((d) => !g.marcas.some((m) => domina(m.dims, d)));
+      hechas.forEach((d) => g.marcas.push({ dims: d, fecha: s.fecha }));
+      g.puntos.push({
+        fecha: s.fecha,
+        trabajo: hechas.reduce((t, d) => t + rendimiento(d), 0),
+        series: hechas.length,
+        texto: textoMarca(dura),
+        marca: marcaHoy,
+      });
     })
   );
 
-  const ejercicios = [...mapa.values()].map((g) => {
-    const mejor = g.puntos.reduce((a, b) =>
-      (b.valor > a.valor || (b.valor === a.valor && b.desempate > a.desempate)) ? b : a);
-    return Object.assign({}, g, { mejor: mejor, ultima: g.puntos[g.puntos.length - 1] });
+  const ejercicios = [...datos.values()].map((g) => {
+    const front = frenteDe(g.marcas);
+    return Object.assign({}, g, { front: front, ultima: g.puntos[g.puntos.length - 1] });
   }).sort((a, b) => (a.ultima.fecha < b.ultima.fecha ? 1 : -1));
 
   const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
@@ -1087,42 +1222,56 @@ function pantallaProgreso() {
   const cuerpo = ejercicios.length === 0
     ? h("div", { class: "rt-vacio" },
         h("p", { class: "rt-vacio-t", text: "Nada que medir todavía." }),
-        h("p", { class: "rt-vacio-d", text: "Registra una sesión con reps, segundos o kg y aquí verás tus récords y cómo evoluciona cada ejercicio." })
+        h("p", { class: "rt-vacio-d", text: "Registra una sesión y aquí verás tus marcas de cada ejercicio: las reps con su lastre, los segundos con su progresión o su palanca." })
       )
     : ejercicios.map((g) => {
         const abierta = estado.abiertoProgreso === g.clave;
         const puntos = g.puntos.slice(-14);
-        const max = Math.max.apply(null, puntos.map((p) => p.valor).concat([1]));
-        const fresco = g.ultima.fecha === g.mejor.fecha && g.puntos.length > 1;
+        const max = Math.max.apply(null, puntos.map((p) => p.trabajo).concat([1]));
+        const fresca = g.ultima.marca;
+        const tope = g.front[0];
 
         const cab = h("div", { class: "rt-ej-cab" },
           h("button", { class: "rt-plantilla-t", "aria-expanded": abierta ? "true" : "false",
             onclick: () => { estado.abiertoProgreso = abierta ? null : g.clave; render(); } },
             g.nombre,
             h("span", { class: "rt-plantilla-c",
-              text: g.puntos.length + (g.puntos.length === 1 ? " sesión" : " sesiones") + " · última el " + fechaCorta(g.ultima.fecha) })
+              text: g.puntos.length + (g.puntos.length === 1 ? " sesión" : " sesiones") +
+                    " · última el " + fechaCorta(g.ultima.fecha) })
           ),
-          h("span", { class: "rt-record" + (fresco ? " es-fresco" : "") },
-            h("span", { class: "rt-record-num", text: g.mejor.valor }),
-            h("span", { class: "rt-record-uni", text: g.unidad + " máx." })
+          h("span", { class: "rt-marca" + (fresca ? " es-fresco" : "") },
+            h("span", { class: "rt-marca-t", text: textoMarca(tope.dims) }),
+            h("span", { class: "rt-marca-uni",
+              text: g.front.length > 1 ? "la más dura de " + g.front.length + " marcas" : "tu marca" })
           )
         );
 
         const barras = h("div", { class: "rt-barras", role: "img", "aria-label": "Evolución de " + g.nombre },
           puntos.map((p) => h("span", {
-            class: "rt-barra" + (p.valor === g.mejor.valor ? " es-max" : ""),
-            style: { height: Math.max(8, (p.valor / max) * 100) + "%" },
-            title: fechaCorta(p.fecha) + " · " + p.texto,
+            class: "rt-barra" + (p.marca ? " es-max" : ""),
+            style: { height: Math.max(8, (p.trabajo / max) * 100) + "%" },
+            title: fechaCorta(p.fecha) + " · " + p.texto + " · " + p.trabajo +
+                   (g.medida === "seg" ? " s en total" : " reps en total") +
+                   (p.marca ? " · marca" : ""),
           })));
 
         const piePeriodo = h("p", { class: "rt-barras-pie" },
           h("span", { text: fechaCorta(puntos[0].fecha) }),
+          h("span", { text: (g.medida === "seg" ? "segundos" : "reps") + " por sesión · en rojo, marca" }),
           h("span", { text: fechaCorta(puntos[puntos.length - 1].fecha) })
         );
 
         const detalle = abierta ? h("div", { class: "rt-plantilla-cuerpo" },
-          h("p", { class: "rt-prev" },
-            h("span", { text: "Mejor serie" }), " " + g.mejor.texto + " · " + fechaCorta(g.mejor.fecha)),
+          h("p", { class: "rt-nota rt-marcas-cab",
+            text: g.front.length > 1
+              ? "Tus marcas. Ninguna queda por debajo de otra en todo: son buenas cada una en lo suyo."
+              : "Tu marca." }),
+          h("ul", { class: "rt-marcas" }, g.front.map((m, k) =>
+            h("li", { class: k === 0 ? "es-tope" : "" },
+              h("span", { class: "rt-marcas-t", text: textoMarca(m.dims) }),
+              h("span", { class: "rt-marcas-f", text: fechaCorta(m.fecha) })
+            ))),
+          h("p", { class: "rt-label rt-hist-cab", text: "Últimas sesiones" }),
           h("ul", { class: "rt-hist" }, g.puntos.slice().reverse().slice(0, 10).map((p) =>
             h("li", null,
               h("span", { class: "rt-hist-f", text: fechaCorta(p.fecha) }),

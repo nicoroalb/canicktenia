@@ -1,6 +1,6 @@
 /* Canicktenia — funcionamiento sin conexión */
 
-const CACHE = "canicktenia-v3";
+const CACHE = "canicktenia-v4";
 const FUENTES = "canicktenia-fuentes-v1";
 
 const CONCHA = [
