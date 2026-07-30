@@ -316,13 +316,6 @@ const lunesDe = (iso) => {
 
 const clave = (n) => (n || "").trim().toLowerCase();
 
-/* Progresiones sueltas, gomas sueltas y todas sus combinaciones.
-   El desplegable filtra según escribes: tecleas "roja" y salen las que la usan. */
-const BASES = ["Tuck", "Adv. tuck", "Straddle", "Half lay", "Full"];
-const GOMAS = ["Banda roja", "Banda naranja", "Banda amarilla", "Banda verde"];
-const PROGRESIONES = BASES.concat(GOMAS, ["Sin goma", "Pies apoyados"]);
-BASES.forEach((b) => GOMAS.forEach((g) => PROGRESIONES.push(b + " + " + g)));
-
 /* ============================= Plantillas base ============================ */
 
 const def = (nombre, sets, opts) => {
@@ -435,7 +428,7 @@ const resumenSerie = (e, r) => {
   if (r.valor) p.push(e.medida === "seg" ? r.valor + " s" : r.valor + " reps");
   if (e.peso && r.peso) p.push(r.peso + " kg");
   if (e.cm && r.cm) p.push(r.cm + " cm");
-  if (e.progresion && r.progresion) p.push(r.progresion);
+  if (e.progresion && r.progresion) p.push(textoProgresion(r.progresion) || r.progresion);
   return p.join(" · ");
 };
 
@@ -446,47 +439,67 @@ const resumenSerie = (e, r) => {
    (kg, cm, progresión) — y una marca solo supera a otra si no queda por
    debajo en ninguna. Las que nadie supera son las marcas del ejercicio. */
 
-const NIVELES = {
-  "pies apoyados": 0, "pies en el suelo": 0,
-  "tuck": 2, "adv. tuck": 3, "adv tuck": 3, "advanced tuck": 3,
-  "straddle": 4, "half lay": 5, "half-lay": 5, "halflay": 5,
-  "full": 6, "full lay": 6,
-};
+/* Las progresiones que sé ordenar, de más fácil a más difícil. Cada una con el
+   nombre con el que se escribe siempre y los alias que se aceptan al teclear. */
+const PROGS = [
+  { nombre: "Pies apoyados", n: 0, alias: ["pies apoyados", "pies en el suelo"] },
+  { nombre: "Tuck", n: 2, alias: ["tuck"] },
+  { nombre: "Adv. tuck", n: 3, alias: ["adv. tuck", "adv tuck", "advanced tuck"] },
+  { nombre: "Straddle", n: 4, alias: ["straddle"] },
+  { nombre: "Half lay", n: 5, alias: ["half lay", "half-lay", "halflay"] },
+  { nombre: "Full", n: 6, alias: ["full", "full lay"] },
+];
+const NIVELES = {};
+PROGS.forEach((p) => p.alias.forEach((a) => { NIVELES[a] = p; }));
+const progDe = (t) => NIVELES[clave(t)] || null;
 const nivelProg = (t) => {
-  const k = clave(t);
-  return k in NIVELES ? NIVELES[k] : null;
+  const p = progDe(t);
+  return p ? p.n : null;
 };
 
-/* La goma no es un escalón de la progresión: es otra cosa que se mueve aparte.
+/* La banda no es un escalón de la progresión: es otra cosa que se mueve aparte.
    Un adv. tuck con banda roja y un adv. tuck a secas son la misma palanca con
    distinta ayuda, así que la ayuda va en kg y en su propia dimensión.
-   Más kg de goma = más ayuda = más fácil. */
-const AYUDAS = {
-  "banda roja": 45, "goma roja": 45, "roja": 45,
-  "banda naranja": 35, "goma naranja": 35, "naranja": 35,
-  "banda amarilla": 25, "goma amarilla": 25, "amarilla": 25,
-  "banda verde": 15, "goma verde": 15, "verde": 15,
-  /* Apuntes antiguos sin color: se tratan como la goma más gorda, así se dejan
-     ganar por cualquier otra en vez de quedarse fuera de la comparación. */
-  "banda": 45, "goma": 45,
-  "sin goma": 0, "sin banda": 0,
-};
-const ayudaDe = (t) => {
-  const k = clave(t);
-  return k in AYUDAS ? AYUDAS[k] : null;
-};
+   Más kg de banda = más ayuda = más fácil.
 
-/* "Adv. tuck + banda roja" -> base "Adv. tuck", ayuda 45 */
+   Aquí vive todo lo que la app sabe de las bandas: el nombre con el que se
+   escriben siempre, su ayuda y los alias que se aceptan al teclear. Se apunte
+   como se apunte, luego se muestra con el nombre de esta lista. */
+const BANDAS = [
+  { nombre: "Banda roja", kg: 45, alias: ["banda roja", "goma roja", "roja"] },
+  { nombre: "Banda naranja", kg: 35, alias: ["banda naranja", "goma naranja", "naranja"] },
+  { nombre: "Banda amarilla", kg: 25, alias: ["banda amarilla", "goma amarilla", "amarilla"] },
+  { nombre: "Banda verde", kg: 15, alias: ["banda verde", "goma verde", "verde"] },
+  { nombre: "Sin banda", kg: 0, alias: ["sin banda", "sin goma", "sin ayuda"] },
+  /* Apuntes antiguos sin color: valen como la banda más gorda, así se dejan
+     ganar por cualquier otra en vez de quedarse fuera de la comparación. */
+  { nombre: "Banda", kg: 45, alias: ["banda", "goma"] },
+];
+
+const AYUDAS = {};
+BANDAS.forEach((b) => b.alias.forEach((a) => { AYUDAS[a] = b; }));
+const ayudaDe = (t) => AYUDAS[clave(t)] || null;
+
+/* Progresiones sueltas, bandas sueltas y todas sus combinaciones.
+   El desplegable filtra según escribes: tecleas "roja" y salen las que la usan. */
+const BASES = PROGS.filter((p) => p.n > 0).map((p) => p.nombre);
+const CON_COLOR = BANDAS.filter((b) => b.kg > 0 && b.nombre !== "Banda").map((b) => b.nombre);
+const PROGRESIONES = BASES.concat(CON_COLOR, ["Sin banda", "Pies apoyados"]);
+BASES.forEach((b) => CON_COLOR.forEach((g) => PROGRESIONES.push(b + " + " + g)));
+
+/* "Adv. tuck + goma roja" -> base "Adv. tuck", ayuda 45, texto "Banda roja" */
 const leerProgresion = (texto) => {
   const partes = String(texto || "").split(/[+/·,]/).map((s) => s.trim()).filter(Boolean);
   const base = [];
   let ayuda = null, textoAyuda = "";
   partes.forEach((p) => {
-    const a = ayudaDe(p);
-    if (a == null) base.push(p);
-    else if (a > 0) {
-      ayuda = (ayuda || 0) + a;
-      textoAyuda = textoAyuda ? textoAyuda + " + " + p : p;
+    const b = ayudaDe(p);
+    if (!b) {
+      const g = progDe(p);
+      base.push(g ? g.nombre : p);
+    } else if (b.kg > 0) {
+      ayuda = (ayuda || 0) + b.kg;
+      textoAyuda = textoAyuda ? textoAyuda + " + " + b.nombre : b.nombre;
     }
   });
   const t = base.join(" + ");
@@ -504,8 +517,8 @@ const dimsSerie = (ej, r) => {
   if (ej.progresion) {
     const p = leerProgresion(r.progresion);
     if (p.texto) dims.push({ tipo: "prog", n: p.n, texto: p.texto });
-    /* En negativo: domina() ya premia el número más alto, y una serie sin goma
-       lee 0. Así, sin goma (0) supera a la verde (-15) y esta a la roja (-45). */
+    /* En negativo: domina() ya premia el número más alto, y una serie sin banda
+       lee 0. Así, sin banda (0) supera a la verde (-15) y esta a la roja (-45). */
     if (p.ayuda > 0) dims.push({ tipo: "ayuda", n: -p.ayuda, texto: p.textoAyuda });
   }
   return dims;
@@ -720,6 +733,13 @@ const sanearPlantilla = (p) => ({
     sets: Math.max(1, Number(e.sets) || 1),
   })),
 });
+
+/* La progresión entera, escrita siempre igual: "goma roja" -> "Banda roja" */
+const textoProgresion = (t) => {
+  const p = leerProgresion(t);
+  if (p.texto && p.textoAyuda) return p.texto + " + " + p.textoAyuda;
+  return p.texto || p.textoAyuda;
+};
 
 /* ============================== Mini-DOM (h) ============================== */
 
@@ -1124,7 +1144,15 @@ function bloqueEjercicio(sesion, ej, i, frentes, recs) {
     );
     const prog = ej.progresion ? h("input", { class: "rt-prog", list: "rt-prog", value: r.progresion,
       placeholder: "Progresión (adv. tuck, banda verde, full…)", "aria-label": "Progresión",
-      oninput: (e) => { r.progresion = e.target.value; guardar(); } }) : null;
+      oninput: (e) => { r.progresion = e.target.value; guardar(); },
+      onchange: (e) => {
+        const limpio = textoProgresion(e.target.value);
+        if (limpio && limpio !== e.target.value) {
+          r.progresion = limpio;
+          e.target.value = limpio;
+          guardar();
+        }
+      } }) : null;
     return h("div", { class: "rt-serie" }, fila, prog);
   });
 
