@@ -208,6 +208,14 @@ textarea{resize:vertical;}
 .rt-hist-t{flex:1;min-width:0;}
 .rt-hist-s{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--humo);flex-shrink:0;}
 
+.rt-version{margin:16px 0 0;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--humo);}
+.rt-actualizar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:12px;
+  background:var(--hierro);color:var(--tiza);font-size:13px;
+  padding:13px calc(20px + var(--der)) calc(13px + var(--abajo)) calc(20px + var(--izq));}
+.rt-actualizar span{flex:1;line-height:1.35;}
+.rt-actualizar button{flex-shrink:0;color:var(--tiza);border:1px solid var(--tiza);padding:8px 12px;
+  font-size:11px;letter-spacing:.08em;text-transform:uppercase;}
+
 .rt-borrar-sesion{display:block;margin-top:20px;font-size:13px;color:var(--sangre);text-decoration:underline;padding:4px 0;}
 .rt-confirmar{margin-top:20px;border:1px solid var(--sangre);padding:14px;font-size:13px;line-height:1.5;}
 .rt-confirmar p{margin:0 0 10px;}
@@ -237,6 +245,7 @@ const K_SESIONES = "canicktenia:sesiones:v1";
 const K_PLANTILLAS = "canicktenia:plantillas:v1";
 const K_VERSION = "canicktenia:version";
 const VERSION_DATOS = 2;
+const VERSION_APP = "1.4";
 const memoria = {};
 
 /* Ejercicios que han cambiado de nombre: clave en minúsculas -> nombre nuevo.
@@ -706,6 +715,7 @@ const estado = {
   aviso: null,
   pendiente: null,
   textoCopia: "",
+  actualizacion: false,
 };
 
 let guardadoPendiente = null;
@@ -792,6 +802,15 @@ function render() {
   else anexar(raiz, pantallaHistorial());
 
   if (estado.eligiendo) anexar(raiz, hojaSelector());
+  if (estado.actualizacion) anexar(raiz, bandaActualizar());
+}
+
+/* Aviso discreto: la versión nueva ya está descargada y espera a que recargues */
+function bandaActualizar() {
+  return h("div", { class: "rt-actualizar" },
+    h("span", { text: "Hay una versión nueva del cuaderno." }),
+    h("button", { text: "Actualizar", onclick: () => { guardar(true); location.reload(); } })
+  );
 }
 
 function actualizarDatalists() {
@@ -1477,6 +1496,22 @@ function pantallaDatos() {
     lector.readAsText(file);
   };
 
+  const buscarVersion = async () => {
+    if (!("serviceWorker" in navigator)) {
+      return poner("error", "Esto solo funciona con la app abierta desde su icono.");
+    }
+    try {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (!reg) return poner("error", "Aún no está instalada como app. Ábrela desde su icono en la pantalla de inicio.");
+      await reg.update();
+      poner("ok", estado.actualizacion
+        ? "Hay una versión nueva: toca «Actualizar» abajo."
+        : "Comprobado. Si hay algo nuevo, aparecerá abajo un aviso para actualizar.");
+    } catch (e) {
+      poner("error", "No he podido comprobarlo. ¿Estás sin conexión?");
+    }
+  };
+
   const cabecera = h("header", { class: "rt-cab rt-cab-sec" },
     h("h1", { class: "rt-titulo rt-titulo-sm", text: "DATOS" }),
     h("span", { class: "rt-marcador-uni", text: "Copia de seguridad" })
@@ -1545,8 +1580,17 @@ function pantallaDatos() {
       )
     : null;
 
+  const versionSec = h("section", { class: "rt-ej" },
+    h("h2", { class: "rt-ej-t", text: "Versión" }),
+    h("p", { class: "rt-nota", text: "La app se actualiza sola al abrirla con conexión. Si acabas de subir una versión nueva y no la ves, ciérrala del todo y vuelve a abrirla." }),
+    h("div", { class: "rt-acciones" },
+      h("button", { class: "rt-boton", text: "Buscar actualización", onclick: buscarVersion })
+    ),
+    h("p", { class: "rt-version", text: "Canicktenia · versión " + VERSION_APP })
+  );
+
   return [cabecera, nav("datos"),
-    h("main", { class: "rt-main" }, banda, guardarSec, recuperarSec, aviso, confirmacion)];
+    h("main", { class: "rt-main" }, banda, guardarSec, recuperarSec, versionSec, aviso, confirmacion)];
 }
 
 /* ================================= Arranque =============================== */
@@ -1583,10 +1627,28 @@ arrancar();
 document.addEventListener("visibilitychange", () => { if (document.hidden) guardar(true); });
 window.addEventListener("pagehide", () => guardar(true));
 
-/* Funcionamiento sin conexión */
+/* Funcionamiento sin conexión y aviso de versión nueva */
+function avisarVersion() {
+  if (estado.actualizacion) return;
+  estado.actualizacion = true;
+  render();
+}
+
 if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  const habiaControlador = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (habiaControlador) avisarVersion();
+  });
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    navigator.serviceWorker.register("sw.js").then((reg) => {
+      reg.addEventListener("updatefound", () => {
+        const nuevo = reg.installing;
+        if (!nuevo) return;
+        nuevo.addEventListener("statechange", () => {
+          if (nuevo.state === "installed" && habiaControlador) avisarVersion();
+        });
+      });
+    }).catch(() => {});
   });
 }
 </script>
