@@ -189,12 +189,23 @@ textarea{resize:vertical;}
 .rt-marca-t{display:block;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;font-weight:600;}
 .rt-marca-uni{display:block;margin-top:2px;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--humo);}
 .rt-marca.es-fresco .rt-marca-t{color:var(--sangre);}
-.rt-barras{display:flex;align-items:flex-end;gap:3px;height:54px;margin-top:14px;}
-.rt-barra{flex:1;min-width:3px;background:var(--hierro);opacity:.75;}
-.rt-barra.es-max{background:var(--sangre);opacity:1;}
+.rt-barras{display:flex;align-items:stretch;gap:3px;height:54px;margin-top:14px;}
+.rt-barra{flex:1;min-width:3px;display:flex;align-items:flex-end;padding:0;background:none;}
+.rt-barra span{display:block;width:100%;background:var(--hierro);opacity:.75;}
+.rt-barra.es-max span{background:var(--sangre);opacity:1;}
+.rt-barra.es-elegida span{opacity:1;outline:2px solid var(--hierro);outline-offset:1px;}
+.rt-barra.es-max.es-elegida span{outline-color:var(--sangre);}
 .rt-barras-pie{display:flex;justify-content:space-between;gap:8px;margin:5px 0 0;font-size:9px;
   letter-spacing:.07em;text-transform:uppercase;color:var(--humo);}
 .rt-barras-pie span:nth-child(2){text-align:center;letter-spacing:.04em;}
+.rt-punto{margin:5px 0 0;border-top:1px solid var(--linea);padding-top:6px;}
+.rt-punto p{margin:0;}
+.rt-punto-cab{font-size:9px;letter-spacing:.09em;text-transform:uppercase;color:var(--humo);}
+.rt-punto-cab strong{font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:11px;font-weight:600;
+  letter-spacing:.04em;color:var(--hierro);}
+.rt-punto-marca{color:var(--sangre);margin-left:7px;}
+.rt-punto-num{margin-top:4px;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:12px;line-height:1.45;}
+.rt-punto-dura{margin-top:2px;font-size:11px;color:var(--humo);line-height:1.4;}
 .rt-marcas-cab{margin:0 0 4px;}
 .rt-marcas{list-style:none;margin:0 0 4px;padding:0;}
 .rt-marcas li{display:flex;align-items:baseline;gap:10px;padding:8px 0;border-top:1px solid var(--linea);}
@@ -219,7 +230,7 @@ textarea{resize:vertical;}
 .rt-borrar-sesion{display:block;margin-top:20px;font-size:13px;color:var(--sangre);text-decoration:underline;padding:4px 0;}
 .rt-confirmar{margin-top:20px;border:1px solid var(--sangre);padding:14px;font-size:13px;line-height:1.5;}
 .rt-confirmar p{margin:0 0 10px;}
-.rt-confirmar-pie{display:flex;flex-wrap:wrap;gap:20px;}
+.rt-confirmar-pie{display:flex;gap:20px;}
 
 @media (max-width:360px){
   .rt-nav{gap:10px;font-size:10px;letter-spacing:.05em;}
@@ -243,10 +254,9 @@ textarea{resize:vertical;}
 
 const K_SESIONES = "canicktenia:sesiones:v1";
 const K_PLANTILLAS = "canicktenia:plantillas:v1";
-const K_EXPORTADAS = "canicktenia:exportadas:v1";
 const K_VERSION = "canicktenia:version";
 const VERSION_DATOS = 2;
-const VERSION_APP = "1.6";
+const VERSION_APP = "1.7";
 const memoria = {};
 
 /* Ejercicios que han cambiado de nombre: clave en minúsculas -> nombre nuevo.
@@ -298,6 +308,10 @@ const partesFecha = (iso) => {
 const fechaCorta = (iso) => {
   const f = partesFecha(iso);
   return f.dia + " " + f.mes;
+};
+const fechaLarga = (iso) => {
+  const f = partesFecha(iso);
+  return f.dia + " " + f.mes + " " + f.anio;
 };
 const numero = (n) => Math.round(n).toLocaleString("es-ES");
 
@@ -602,22 +616,76 @@ const rendimiento = (dims) => {
   return nd(m, "reps") + nd(m, "seg");
 };
 
-const colorEj = (ej, r) => {
-  if (ej.medida === "seg") {
-    const s = Number(r.valor) || 0;
-    if (s >= 20) return "#C0392B";
-    if (s >= 10) return "#2B5FC8";
-    if (s >= 5) return "#D9A521";
-    if (s > 0) return "#2F8F5B";
-    return "#C6C7C0";
-  }
-  const kg = Number(r.peso) || 0;
-  if (kg >= 80) return "#C0392B";
-  if (kg >= 40) return "#2B5FC8";
-  if (kg >= 20) return "#D9A521";
-  if (Number(r.valor) > 0) return "#2F8F5B";
-  return "#C6C7C0";
+/* Lo que dio un ejercicio en una sesión: reps, segundos, volumen y lastre.
+   El volumen solo tiene sentido con repeticiones; en los ejercicios por tiempo
+   se enseña el lastre más alto de la sesión. */
+const totalesPunto = (hechas) => {
+  let reps = 0, seg = 0, kg = 0, maxKg = 0;
+  hechas.forEach((d) => {
+    const m = mapaDims(d);
+    const r = nd(m, "reps"), s = nd(m, "seg"), p = nd(m, "kg");
+    reps += r; seg += s; kg += p * r;
+    if (p > maxKg) maxKg = p;
+  });
+  return { reps: reps, seg: seg, kg: kg, maxKg: maxKg };
 };
+
+const textoPunto = (p) => {
+  const t = [];
+  if (p.reps) t.push(p.reps + (p.reps === 1 ? " rep" : " reps"));
+  if (p.seg) t.push(p.seg + " s");
+  if (p.kg) t.push(numero(p.kg) + " kg de volumen");
+  else if (p.maxKg) t.push(p.maxKg + " kg");
+  t.push(p.series + (p.series === 1 ? " set" : " sets"));
+  return t.join(" · ");
+};
+
+/* --------------------------- El disco de color ----------------------------
+   Cada set se compara con el mismo set de la última vez que se hizo ese
+   ejercicio: el 1º de hoy con el 1º de aquel día, el 2º con el 2º, etc.
+   Verde si lo supera (mejor en algo y peor en nada), rojo si se queda por
+   detrás, amarillo si es un empate o un cambio de sitio (menos reps pero más
+   kg, por ejemplo: ni mejor ni peor). Gris si no hay con qué compararlo. */
+
+const COLORES = { mejor: "#2F8F5B", igual: "#D9A521", peor: "#C0392B", nada: "#C6C7C0" };
+const ROTULOS = {
+  mejor: "Mejor que la última vez",
+  igual: "Igual que la última vez",
+  peor: "Por debajo de la última vez",
+  nada: "Sin comparación",
+};
+
+const compararSerie = (ej, r, previa, j) => {
+  const d = dimsSerie(ej, r);
+  if (!d) return "nada";
+  const ref = previa && previa.dims[j];
+  if (!ref) return "nada";
+  if (domina(d, ref)) return "mejor";
+  if (domina(ref, d)) return "peor";
+  return "igual";
+};
+
+const colorEj = (ej, r, previa, j) => COLORES[compararSerie(ej, r, previa, j)];
+
+/* Las series con datos de la última vez que se hizo cada ejercicio de esta
+   sesión, en orden y sin los huecos vacíos. */
+function seriesPrevias(sesiones, sesion) {
+  const mapa = new Map();
+  const previas = sesiones
+    .filter((s) => s.id !== sesion.id && s.fecha <= sesion.fecha)
+    .sort((a, b) => (a.fecha < b.fecha ? 1 : -1));
+  (sesion.ejercicios || []).forEach((ej) => {
+    const k = clave(ej.nombre);
+    if (!k || mapa.has(k)) return;
+    for (const s of previas) {
+      const e = (s.ejercicios || []).find((x) => clave(x.nombre) === k);
+      if (!e) continue;
+      const dims = (e.series || []).map((r) => dimsSerie(e, r)).filter(Boolean);
+      if (dims.length) { mapa.set(k, { fecha: s.fecha, dims: dims }); break; }
+    }
+  });
+  return mapa;
+}
 
 const ultimaVez = (sesiones, nombre, idActual) => {
   const k = clave(nombre);
@@ -742,101 +810,6 @@ const textoProgresion = (t) => {
   return p.texto || p.textoAyuda;
 };
 
-/* =========================== Llevar al calendario =========================
-   Un archivo .ics con un evento de día completo por sesión. El UID lleva el
-   id de la sesión, así que si el calendario lo respeta, reimportar actualiza
-   en vez de duplicar. Como iOS no siempre lo respeta, la app además apunta
-   qué sesiones ya salieron (K_EXPORTADAS) y por defecto solo manda las
-   nuevas. */
-
-const escaparICS = (t) => String(t == null ? "" : t)
-  .replace(/\\/g, "\\\\")
-  .replace(/;/g, "\\;")
-  .replace(/,/g, "\\,")
-  .replace(/\r?\n/g, "\\n");
-
-/* Ninguna línea pasa de 75 octetos: se parte y la de abajo empieza por un
-   espacio. Se cuenta en bytes porque las tildes ocupan dos. */
-const octetos = (ch) => {
-  const c = ch.codePointAt(0);
-  return c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4;
-};
-const plegar = (linea) => {
-  const salida = [];
-  let actual = "", bytes = 0;
-  for (const ch of linea) {
-    const n = octetos(ch);
-    if (bytes + n > 75) { salida.push(actual); actual = " "; bytes = 1; }
-    actual += ch;
-    bytes += n;
-  }
-  salida.push(actual);
-  return salida;
-};
-
-const fechaICS = (iso) => String(iso || "").replace(/-/g, "");
-const diaDespues = (iso) => {
-  const d = new Date(iso + "T00:00:00");
-  if (isNaN(d)) return iso;
-  d.setDate(d.getDate() + 1);
-  return isoDe(d);
-};
-const selloICS = () => new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, "");
-
-/* "Upper 1 · 1.240 kg · 2 récords" */
-const tituloSesion = (s) => {
-  const partes = [String(s.tipo || "Sesión").trim() || "Sesión"];
-  const kg = kgSesion(s), seg = segSesion(s), reps = repsSesion(s);
-  if (kg > 0) partes.push(numero(kg) + " kg");
-  else if (reps > 0) partes.push(reps + " reps");
-  if (seg > 0) partes.push(seg + " s");
-  const n = cuentaRecords(recordsDeSesion(s, estado.sesiones));
-  if (n > 0) partes.push(n + (n === 1 ? " récord" : " récords"));
-  return partes.join(" · ");
-};
-
-/* El cuerpo del evento: cada ejercicio con sus series, sus notas y las de la
-   sesión al final. Lo mismo que ves en la pantalla, en texto plano. */
-const detalleSesion = (s) => {
-  const lineas = [];
-  (s.ejercicios || []).forEach((e) => {
-    const hechas = (e.series || []).filter((r) => String(r.valor || "").trim())
-      .map((r) => resumenSerie(e, r));
-    if (!hechas.length) return;
-    lineas.push((e.nombre || "Ejercicio") + ": " + hechas.join("  /  "));
-    if ((e.notas || "").trim()) lineas.push("   " + e.notas.trim());
-  });
-  if ((s.notas || "").trim()) { lineas.push(""); lineas.push(s.notas.trim()); }
-  return lineas.join("\n");
-};
-
-const paqueteICS = (sesiones) => {
-  const sello = selloICS();
-  const lineas = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Canicktenia//Cuaderno de entrenamiento//ES",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "X-WR-CALNAME:Entrenos",
-  ];
-  sesiones.forEach((s) => {
-    lineas.push(
-      "BEGIN:VEVENT",
-      "UID:" + s.id + "@canicktenia",
-      "DTSTAMP:" + sello,
-      "DTSTART;VALUE=DATE:" + fechaICS(s.fecha),
-      "DTEND;VALUE=DATE:" + fechaICS(diaDespues(s.fecha)),
-      "SUMMARY:" + escaparICS(tituloSesion(s)),
-      "DESCRIPTION:" + escaparICS(detalleSesion(s)),
-      "TRANSP:TRANSPARENT",
-      "END:VEVENT"
-    );
-  });
-  lineas.push("END:VCALENDAR");
-  return lineas.reduce((t, l) => t.concat(plegar(l)), []).join("\r\n") + "\r\n";
-};
-
 /* ============================== Mini-DOM (h) ============================== */
 
 function h(tag, props) {
@@ -868,16 +841,15 @@ function anexar(el, hijo) {
 const estado = {
   sesiones: [],
   plantillas: [],
-  exportadas: [],           /* ids de sesiones que ya fueron al calendario */
   vista: { pantalla: "historial", id: null },
   eligiendo: false,
   recienCreadas: [],
   abiertaPlantilla: null,
   abiertoProgreso: null,
+  puntoProgreso: null,      /* { clave, i } de la barra abierta en Progreso */
   anadiendo: null,          /* "sesion" | id de plantilla | null */
   confirmarBorrado: false,
   confirmarReset: false,
-  confirmarReexportar: false,
   aviso: null,
   pendiente: null,
   textoCopia: "",
@@ -895,22 +867,6 @@ function guardar(inmediato) {
   if (inmediato) escribir();
   else guardadoPendiente = setTimeout(escribir, 400);
 }
-/* La lista de exportadas se guarda aparte y al momento: es un apunte de "esto
-   ya salió", y no debe perderse si se cierra la app justo después. */
-function marcarExportadas(ids) {
-  const vistas = {};
-  estado.exportadas.concat(ids).forEach((id) => { vistas[id] = 1; });
-  estado.exportadas = Object.keys(vistas);
-  almacen.escribir(K_EXPORTADAS, estado.exportadas);
-}
-/* Fuera los ids de sesiones que ya no existen, para que la lista no engorde */
-function podarExportadas() {
-  const hay = {};
-  estado.sesiones.forEach((s) => { hay[s.id] = 1; });
-  estado.exportadas = estado.exportadas.filter((id) => hay[id]);
-  almacen.escribir(K_EXPORTADAS, estado.exportadas);
-}
-
 let yaAvisado = false;
 function avisoGuardado() {
   if (yaAvisado) return;
@@ -925,9 +881,9 @@ function irA(pantalla) {
   estado.anadiendo = null;
   estado.confirmarBorrado = false;
   estado.confirmarReset = false;
-  estado.confirmarReexportar = false;
   estado.aviso = null;
   estado.pendiente = null;
+  estado.puntoProgreso = null;
   render();
   window.scrollTo(0, 0);
 }
@@ -1135,6 +1091,7 @@ function hojaSelector() {
 
 function pantallaSesion(sesion) {
   const frentes = frentesAntesDe(estado.sesiones, sesion);
+  const previos = seriesPrevias(estado.sesiones, sesion);
   const recs = recordsDeSesion(sesion, estado.sesiones);
   const nRecs = cuentaRecords(recs);
 
@@ -1161,7 +1118,7 @@ function pantallaSesion(sesion) {
     )
   );
 
-  const bloques = sesion.ejercicios.map((ej, i) => bloqueEjercicio(sesion, ej, i, frentes, recs));
+  const bloques = sesion.ejercicios.map((ej, i) => bloqueEjercicio(sesion, ej, i, frentes, recs, previos));
 
   const anadir = estado.anadiendo === "sesion"
     ? bloqueNuevoEjercicio(
@@ -1211,10 +1168,11 @@ const textoMarcador = (s) => {
 const textoRecords = (n) =>
   n > 0 ? "en esta sesión · " + n + (n === 1 ? " récord" : " récords") : "en esta sesión";
 
-function bloqueEjercicio(sesion, ej, i, frentes, recs) {
+function bloqueEjercicio(sesion, ej, i, frentes, recs, previos) {
   const setEj = () => { guardar(true); render(); };
   const prev = ultimaVez(estado.sesiones, ej.nombre, sesion.id);
   const front = frentes.get(clave(ej.nombre)) || [];
+  const previa = previos.get(clave(ej.nombre));
 
   const cab = h("div", { class: "rt-ej-cab" },
     h("h2", { class: "rt-ej-t", text: ej.nombre || "Ejercicio" }),
@@ -1242,7 +1200,10 @@ function bloqueEjercicio(sesion, ej, i, frentes, recs) {
   const series = ej.series.map((r, j) => {
     const fila = h("div", { class: "rt-serie-fila", dataset: { fila: "1", ej: i, serie: j } },
       h("span", { class: "rt-serie-n", text: j + 1 }),
-      h("span", { class: "rt-disco", style: { background: colorEj(ej, r) } }),
+      h("span", { class: "rt-disco", role: "img",
+        "aria-label": ROTULOS[compararSerie(ej, r, previa, j)],
+        title: ROTULOS[compararSerie(ej, r, previa, j)],
+        style: { background: colorEj(ej, r, previa, j) } }),
       medida(ej.medida === "seg" ? "seg" : "reps",
         { class: "rt-num", inputmode: "numeric", value: r.valor,
           "aria-label": ej.medida === "seg" ? "Segundos" : "Repeticiones",
@@ -1317,6 +1278,7 @@ function refrescarSesion() {
   const s = sesionActual();
   if (!s) return;
   const recs = recordsDeSesion(s, estado.sesiones);
+  const previos = seriesPrevias(estado.sesiones, s);
   document.querySelectorAll("[data-fila]").forEach((fila) => {
     const i = Number(fila.dataset.ej), j = Number(fila.dataset.serie);
     const ej = s.ejercicios[i];
@@ -1324,7 +1286,12 @@ function refrescarSesion() {
     const r = ej.series[j];
     if (!r) return;
     const disco = fila.querySelector(".rt-disco");
-    if (disco) disco.style.background = colorEj(ej, r);
+    if (disco) {
+      const c = compararSerie(ej, r, previos.get(clave(ej.nombre)), j);
+      disco.style.background = COLORES[c];
+      disco.setAttribute("aria-label", ROTULOS[c]);
+      disco.setAttribute("title", ROTULOS[c]);
+    }
     const pr = fila.querySelector(".rt-pr");
     if (pr) pr.classList.toggle("es-oculto", !(recs[i] && recs[i][j]));
   });
@@ -1388,6 +1355,18 @@ function bloqueNuevoEjercicio(onAnadir, onCancelar) {
 
 /* ============================== 5. Progreso =============================== */
 
+/* Con ratón, basta con pasar por encima; con el dedo, hay que tocar (y volver
+   a tocar la misma barra la cierra). */
+const CON_RATON = !!(window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches);
+
+function marcarPunto(k, i, alternar) {
+  const sel = estado.puntoProgreso;
+  const misma = sel && sel.clave === k && sel.i === i;
+  if (misma && !alternar) return;
+  estado.puntoProgreso = misma ? null : { clave: k, i: i };
+  render();
+}
+
 function pantallaProgreso() {
   const datos = new Map();
   estado.sesiones.slice().sort((a, b) => (a.fecha < b.fecha ? -1 : 1)).forEach((s) =>
@@ -1409,13 +1388,13 @@ function pantallaProgreso() {
       const marcaHoy = g.marcas.length > 0 &&
         hechas.some((d) => !g.marcas.some((m) => domina(m.dims, d)));
       hechas.forEach((d) => g.marcas.push({ dims: d, fecha: s.fecha }));
-      g.puntos.push({
+      g.puntos.push(Object.assign({
         fecha: s.fecha,
         trabajo: hechas.reduce((t, d) => t + rendimiento(d), 0),
         series: hechas.length,
         texto: textoMarca(dura),
         marca: marcaHoy,
-      });
+      }, totalesPunto(hechas)));
     })
   );
 
@@ -1437,6 +1416,10 @@ function pantallaProgreso() {
     : ejercicios.map((g) => {
         const abierta = estado.abiertoProgreso === g.clave;
         const puntos = g.puntos.slice(-14);
+        const desfase = g.puntos.length - puntos.length;
+        const sel = estado.puntoProgreso;
+        const elegido = sel && sel.clave === g.clave ? sel.i : -1;
+        const punto = g.puntos[elegido] || null;
         const max = Math.max.apply(null, puntos.map((p) => p.trabajo).concat([1]));
         const fresca = g.ultima.marca;
         const tope = g.front[0];
@@ -1456,20 +1439,34 @@ function pantallaProgreso() {
           )
         );
 
-        const barras = h("div", { class: "rt-barras", role: "img", "aria-label": "Evolución de " + g.nombre },
-          puntos.map((p) => h("span", {
-            class: "rt-barra" + (p.marca ? " es-max" : ""),
-            style: { height: Math.max(8, (p.trabajo / max) * 100) + "%" },
-            title: fechaCorta(p.fecha) + " · " + p.texto + " · " + p.trabajo +
-                   (g.medida === "seg" ? " s en total" : " reps en total") +
-                   (p.marca ? " · marca" : ""),
-          })));
+        const barras = h("div", { class: "rt-barras" },
+          puntos.map((p, k) => {
+            const idx = desfase + k;
+            const rot = fechaLarga(p.fecha) + " · " + textoPunto(p) + (p.marca ? " · marca" : "");
+            return h("button", {
+              class: "rt-barra" + (p.marca ? " es-max" : "") + (idx === elegido ? " es-elegida" : ""),
+              title: rot, "aria-label": rot, "aria-pressed": idx === elegido ? "true" : "false",
+              onclick: () => marcarPunto(g.clave, idx, true),
+              onmouseenter: CON_RATON ? () => marcarPunto(g.clave, idx, false) : null,
+            }, h("span", { style: { height: Math.max(8, (p.trabajo / max) * 100) + "%" } }));
+          }));
 
         const piePeriodo = h("p", { class: "rt-barras-pie" },
           h("span", { text: fechaCorta(puntos[0].fecha) }),
-          h("span", { text: (g.medida === "seg" ? "segundos" : "reps") + " por sesión · en rojo, marca" }),
+          h("span", { text: (g.medida === "seg" ? "segundos" : "reps") + " por sesión · toca una barra" }),
           h("span", { text: fechaCorta(puntos[puntos.length - 1].fecha) })
         );
+
+        const pie = punto
+          ? h("div", { class: "rt-punto" },
+              h("p", { class: "rt-punto-cab" },
+                h("strong", { text: fechaLarga(punto.fecha) }),
+                punto.marca ? h("span", { class: "rt-punto-marca", text: "marca" }) : null
+              ),
+              h("p", { class: "rt-punto-num", text: textoPunto(punto) }),
+              h("p", { class: "rt-punto-dura", text: "La más dura: " + punto.texto })
+            )
+          : piePeriodo;
 
         const detalle = abierta ? h("div", { class: "rt-plantilla-cuerpo" },
           h("p", { class: "rt-nota rt-marcas-cab",
@@ -1490,7 +1487,7 @@ function pantallaProgreso() {
             )))
         ) : null;
 
-        return h("section", { class: "rt-ej" }, cab, barras, piePeriodo, detalle);
+        return h("section", { class: "rt-ej" }, cab, barras, pie, detalle);
       });
 
   return [cabecera, nav("progreso"), h("main", { class: "rt-main" }, cuerpo)];
@@ -1665,49 +1662,6 @@ function pantallaDatos() {
     }
   };
 
-  /* ---- Calendario ---- */
-  const nombreICS = "entrenos-" + hoy() + ".ics";
-  const conDatos = estado.sesiones.slice()
-    .filter((s) => !sesionVacia(s))
-    .sort((a, b) => (a.fecha < b.fecha ? -1 : 1));
-  const nuevas = conDatos.filter((s) => estado.exportadas.indexOf(s.id) < 0);
-
-  const hecho = (lista) => {
-    marcarExportadas(lista.map((s) => s.id));
-    poner("ok", lista.length + (lista.length === 1 ? " sesión" : " sesiones") +
-      " en el archivo. Ábrelo y elige el calendario «Entrenos».");
-  };
-
-  const compartirICS = async (lista) => {
-    estado.confirmarReexportar = false;
-    try {
-      const archivo = new File([paqueteICS(lista)], nombreICS, { type: "text/calendar" });
-      if (navigator.canShare && navigator.canShare({ files: [archivo] })) {
-        await navigator.share({ files: [archivo], title: "Entrenos" });
-        return hecho(lista);
-      }
-      poner("error", "Compartir no está disponible aquí. Prueba con «Descargar».");
-    } catch (e) {
-      if (e && e.name === "AbortError") return render();
-      poner("error", "No he podido compartir el calendario. Prueba con «Descargar».");
-    }
-  };
-
-  const descargarICS = (lista) => {
-    estado.confirmarReexportar = false;
-    try {
-      const url = URL.createObjectURL(new Blob([paqueteICS(lista)], { type: "text/calendar" }));
-      const a = h("a", { href: url, download: nombreICS });
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      hecho(lista);
-    } catch (e) {
-      poner("error", "La descarga no ha salido. Prueba con «Compartir».");
-    }
-  };
-
   const leer = (raw) => {
     let d;
     try { d = JSON.parse(raw); }
@@ -1767,37 +1721,6 @@ function pantallaDatos() {
     )
   );
 
-  const reexportar = estado.confirmarReexportar
-    ? h("div", { class: "rt-confirmar" },
-        h("p", { text: "Se mandarán las " + conDatos.length + " sesiones otra vez, también las que ya exportaste. Si el calendario no las reconoce, saldrán repetidas. Úsalo si borraste el calendario «Entrenos» y quieres rehacerlo desde cero." }),
-        h("div", { class: "rt-confirmar-pie" },
-          h("button", { text: "Cancelar",
-            onclick: () => { estado.confirmarReexportar = false; render(); } }),
-          h("button", { class: "rt-borrar", text: "Compartir todo",
-            onclick: () => compartirICS(conDatos) }),
-          h("button", { class: "rt-borrar", text: "Descargar todo",
-            onclick: () => descargarICS(conDatos) })
-        )
-      )
-    : h("button", { class: "rt-borrar-sesion", text: "Exportar todo el historial otra vez",
-        disabled: !conDatos.length,
-        onclick: () => { estado.confirmarReexportar = true; estado.aviso = null; render(); } });
-
-  const calendarioSec = h("section", { class: "rt-ej" },
-    h("h2", { class: "rt-ej-t", text: "Llevarlo al calendario" }),
-    h("p", { class: "rt-nota", text: "Cada sesión se convierte en un evento de día completo con sus series y tus notas. Solo salen las que aún no has exportado, así que puedes hacerlo cada semana sin que se repita nada. Crea antes en Calendario un calendario llamado «Entrenos» y elígelo al importar: si algún día se lía, lo borras entero y lo rehaces." }),
-    h("p", { class: "rt-nota", text: nuevas.length
-      ? nuevas.length + (nuevas.length === 1 ? " sesión nueva sin exportar, del " : " sesiones nuevas sin exportar, desde el ") + fechaCorta(nuevas[0].fecha) + "."
-      : (conDatos.length ? "Todo exportado: no hay sesiones nuevas." : "Aún no hay sesiones con datos que exportar.") }),
-    h("div", { class: "rt-acciones" },
-      h("button", { class: "rt-boton", text: "Compartir lo nuevo", disabled: !nuevas.length,
-        onclick: () => compartirICS(nuevas) }),
-      h("button", { class: "rt-boton", text: "Descargar lo nuevo", disabled: !nuevas.length,
-        onclick: () => descargarICS(nuevas) })
-    ),
-    reexportar
-  );
-
   const textarea = h("textarea", { rows: 4, placeholder: '{"app":"Canicktenia", …}',
     oninput: (e) => { estado.textoCopia = e.target.value; revisar.disabled = !estado.textoCopia.trim(); } },
     estado.textoCopia);
@@ -1838,7 +1761,6 @@ function pantallaDatos() {
             estado.pendiente = null;
             estado.textoCopia = "";
             estado.recienCreadas = [];
-            podarExportadas();
             guardar(true);
             irA("historial");
           }})
@@ -1856,7 +1778,7 @@ function pantallaDatos() {
   );
 
   return [cabecera, nav("datos"),
-    h("main", { class: "rt-main" }, banda, guardarSec, calendarioSec, recuperarSec, versionSec, aviso, confirmacion)];
+    h("main", { class: "rt-main" }, banda, guardarSec, recuperarSec, versionSec, aviso, confirmacion)];
 }
 
 /* ================================= Arranque =============================== */
@@ -1877,9 +1799,6 @@ function arrancar() {
   estado.sesiones = Array.isArray(ses) ? ses.map(sanearSesion) : [];
   const pl = almacen.leer(K_PLANTILLAS);
   estado.plantillas = Array.isArray(pl) && pl.length ? pl.map(sanearPlantilla) : PLANTILLAS_BASE();
-  const ex = almacen.leer(K_EXPORTADAS);
-  estado.exportadas = Array.isArray(ex) ? ex.filter((id) => typeof id === "string") : [];
-  podarExportadas();
 
   if ((Number(almacen.leer(K_VERSION)) || 1) < VERSION_DATOS) {
     aplicarRenombrados();
